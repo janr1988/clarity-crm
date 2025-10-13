@@ -1,8 +1,9 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { isSalesLead } from "@/lib/authorization";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { prisma } from "@/lib/prisma";
 
 interface Deal {
   id: string;
@@ -10,7 +11,7 @@ interface Deal {
   value: number;
   probability: number;
   stage: string;
-  expectedCloseDate: string | null;
+  expectedCloseDate: Date | null;
   customer: {
     id: string;
     name: string;
@@ -29,44 +30,48 @@ interface Deal {
   };
 }
 
-export default function DealsPage() {
-  const { data: session, status: sessionStatus } = useSession();
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stageFilter, setStageFilter] = useState("");
+async function getDeals(userId?: string, isLead?: boolean) {
+  let whereClause: any = {};
 
-  useEffect(() => {
-    async function fetchDeals() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const params = new URLSearchParams();
-        if (stageFilter) params.append("stage", stageFilter);
+  // Sales Agents can only see their own deals
+  if (userId && !isLead) {
+    whereClause.ownerId = userId;
+  }
 
-        const response = await fetch(`/api/deals?${params.toString()}`);
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Please log in to view deals");
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setDeals(data);
-      } catch (e: any) {
-        setError(e.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const deals = await prisma.deal.findMany({
+    where: whereClause,
+    include: {
+      customer: {
+        select: { id: true, name: true },
+      },
+      company: {
+        select: { id: true, name: true, industry: true },
+      },
+      owner: {
+        select: { id: true, name: true },
+      },
+      _count: {
+        select: {
+          notes: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    if (sessionStatus === "authenticated" && session?.user) {
-      fetchDeals();
-    } else if (sessionStatus === "unauthenticated") {
-      setError("Please log in to view deals");
-      setIsLoading(false);
-    }
-  }, [sessionStatus, session, stageFilter]);
+  return deals;
+}
+
+export default async function DealsPage() {
+  const session = await getServerSession(authOptions);
+
+  // Redirect to login if not authenticated
+  if (!session) {
+    redirect("/login");
+  }
+
+  const isLead = isSalesLead(session);
+  const deals = await getDeals(session?.user?.id, isLead);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("de-DE", {
@@ -107,33 +112,6 @@ export default function DealsPage() {
     0
   );
 
-  if (isLoading || sessionStatus === "loading") {
-    return (
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Deals</h2>
-        <div className="text-gray-600">Loading deals...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Deals</h2>
-        <div className="text-red-600">Error: {error}</div>
-      </div>
-    );
-  }
-
-  const dealStages = [
-    "PROSPECTING",
-    "QUALIFICATION",
-    "PROPOSAL",
-    "NEGOTIATION",
-    "CLOSED_WON",
-    "CLOSED_LOST",
-  ];
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -173,38 +151,18 @@ export default function DealsPage() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Stage Distribution */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label htmlFor="stage" className="block text-sm font-medium text-gray-700 mb-2">
-              📊 Filter by Stage
-            </label>
-            <select
-              id="stage"
-              value={stageFilter}
-              onChange={(e) => setStageFilter(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-            >
-              <option value="">All Stages</option>
-              {dealStages.map((stage) => (
-                <option key={stage} value={stage}>
-                  {stage.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {stageFilter && (
-            <div className="flex items-end">
-              <button
-                onClick={() => setStageFilter("")}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-              >
-                Clear Filter
-              </button>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Deal Distribution by Stage</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {Object.entries(stageCounts).map(([stage, count]) => (
+            <div key={stage} className="text-center">
+              <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStageColor(stage)}`}>
+                {stage.replace("_", " ")}
+              </div>
+              <div className="text-2xl font-bold text-gray-900 mt-2">{count}</div>
             </div>
-          )}
+          ))}
         </div>
       </div>
 
@@ -295,7 +253,15 @@ export default function DealsPage() {
           </table>
         </div>
       )}
+
+      {/* Summary */}
+      <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+        <div className="text-sm text-gray-600">
+          Showing {deals.length} deals
+          {!isLead && " (your deals only)"}
+          {isLead && " (all team deals)"}
+        </div>
+      </div>
     </div>
   );
 }
-

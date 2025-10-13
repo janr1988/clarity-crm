@@ -1,115 +1,191 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { isSalesLead } from "@/lib/authorization";
+import { redirect } from "next/navigation";
+import Link from "next/link";
 import RevenueCard from "@/components/RevenueCard";
 import PipelineFunnel from "@/components/PipelineFunnel";
 import TopPerformers from "@/components/TopPerformers";
 import PipelineMetrics from "@/components/PipelineMetrics";
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
-interface TeamKPIs {
-  revenue: {
-    current: number;
-    previous: number;
-    growth: number;
-    target: number;
-    achievement: number;
-    quarterly: number;
-    quarterlyTarget: number;
-    yearly: number;
-    yearlyTarget: number;
-  };
-  pipeline: {
-    totalValue: number;
-    weightedValue: number;
-    dealCount: number;
-    averageDealSize: number;
-    conversionRate: number;
-  };
-  dealsByStage: Array<{
-    stage: string;
-    count: number;
-    value: number;
-    avgDaysInStage: number;
-  }>;
-  topPerformers: Array<{
-    userId: string;
-    name: string;
-    email: string;
-    revenue: number;
-    dealsWon: number;
-    dealsLost: number;
-    conversionRate: number;
-    avgDealSize: number;
-  }>;
-  velocity: {
-    avgDealCycle: number;
-  };
-  forecast: {
-    next90Days: number;
-    dealCount: number;
-  };
-  summary: {
-    totalDeals: number;
-    wonDeals: number;
-    lostDeals: number;
-    activeDeals: number;
+async function getTeamKPIs() {
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  const currentQuarter = Math.ceil(currentMonth / 3);
+
+  // Get basic data
+  const [deals, targets, users] = await Promise.all([
+    prisma.deal.findMany({
+      include: {
+        owner: { select: { id: true, name: true, email: true } },
+        customer: { select: { id: true, name: true } },
+        company: { select: { id: true, name: true, industry: true } },
+      },
+    }),
+    prisma.target.findMany({
+      where: { year: currentYear },
+    }),
+    prisma.user.findMany({
+      where: { role: "SALES_AGENT", isActive: true },
+      select: { id: true, name: true, email: true },
+    }),
+  ]);
+
+  // Calculate basic metrics
+  const wonDeals = deals.filter((d) => d.stage === "CLOSED_WON");
+  const lostDeals = deals.filter((d) => d.stage === "CLOSED_LOST");
+  const activeDeals = deals.filter(
+    (d) => d.stage !== "CLOSED_WON" && d.stage !== "CLOSED_LOST"
+  );
+
+  // Revenue calculations
+  const totalRevenue = wonDeals.reduce((sum, d) => sum + d.value, 0);
+  const pipelineValue = activeDeals.reduce((sum, d) => sum + d.value, 0);
+  const weightedPipelineValue = activeDeals.reduce(
+    (sum, d) => sum + d.value * (d.probability / 100),
+    0
+  );
+
+  // Monthly revenue
+  const currentMonthRevenue = wonDeals
+    .filter(
+      (d) =>
+        d.actualCloseDate &&
+        d.actualCloseDate.getMonth() + 1 === currentMonth &&
+        d.actualCloseDate.getFullYear() === currentYear
+    )
+    .reduce((sum, d) => sum + d.value, 0);
+
+  // Previous month revenue
+  const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+  const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+  const prevMonthRevenue = wonDeals
+    .filter(
+      (d) =>
+        d.actualCloseDate &&
+        d.actualCloseDate.getMonth() + 1 === prevMonth &&
+        d.actualCloseDate.getFullYear() === prevYear
+    )
+    .reduce((sum, d) => sum + d.value, 0);
+
+  // Quarterly revenue
+  const quarterlyRevenue = wonDeals
+    .filter(
+      (d) =>
+        d.actualCloseDate &&
+        Math.ceil((d.actualCloseDate.getMonth() + 1) / 3) === currentQuarter &&
+        d.actualCloseDate.getFullYear() === currentYear
+    )
+    .reduce((sum, d) => sum + d.value, 0);
+
+  // Targets
+  const monthlyTarget = targets.find(
+    (t) => t.period === "MONTHLY" && t.month === currentMonth && t.userId === null
+  );
+  const quarterlyTarget = targets.find(
+    (t) => t.period === "QUARTERLY" && t.quarter === currentQuarter && t.userId === null
+  );
+  const yearlyTarget = targets.find((t) => t.period === "YEARLY" && t.userId === null);
+
+  // Performance metrics
+  const totalClosed = wonDeals.length + lostDeals.length;
+  const conversionRate = totalClosed > 0 ? (wonDeals.length / totalClosed) * 100 : 0;
+  const averageDealSize = wonDeals.length > 0 ? totalRevenue / wonDeals.length : 0;
+
+  // Deal stage distribution
+  const dealsByStage = [
+    "PROSPECTING",
+    "QUALIFICATION",
+    "PROPOSAL",
+    "NEGOTIATION",
+    "CLOSED_WON",
+    "CLOSED_LOST",
+  ].map((stage) => {
+    const stageDeals = deals.filter((d) => d.stage === stage);
+    return {
+      stage,
+      count: stageDeals.length,
+      value: stageDeals.reduce((sum, d) => sum + d.value, 0),
+      avgDaysInStage: 30, // Simplified for now
+    };
+  });
+
+  // Top performers
+  const topPerformers = users.map((user) => {
+    const userWonDeals = wonDeals.filter((d) => d.ownerId === user.id);
+    const userTotalDeals = deals.filter((d) => d.ownerId === user.id);
+    const userRevenue = userWonDeals.reduce((sum, d) => sum + d.value, 0);
+    const userConversionRate =
+      userTotalDeals.length > 0 ? (userWonDeals.length / userTotalDeals.length) * 100 : 0;
+    const userAvgDealSize = userWonDeals.length > 0 ? userRevenue / userWonDeals.length : 0;
+
+    return {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      revenue: userRevenue,
+      dealsWon: userWonDeals.length,
+      dealsLost: userTotalDeals.filter((d) => d.stage === "CLOSED_LOST").length,
+      conversionRate: parseFloat(userConversionRate.toFixed(2)),
+      avgDealSize: parseFloat(userAvgDealSize.toFixed(2)),
+    };
+  }).sort((a, b) => b.revenue - a.revenue);
+
+  return {
+    revenue: {
+      current: currentMonthRevenue,
+      previous: prevMonthRevenue,
+      growth: prevMonthRevenue > 0 ? ((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 : 0,
+      target: monthlyTarget?.targetValue || 0,
+      achievement: monthlyTarget?.targetValue ? (currentMonthRevenue / monthlyTarget.targetValue) * 100 : 0,
+      quarterly: quarterlyRevenue,
+      quarterlyTarget: quarterlyTarget?.targetValue || 0,
+      yearly: totalRevenue,
+      yearlyTarget: yearlyTarget?.targetValue || 0,
+    },
+    pipeline: {
+      totalValue: pipelineValue,
+      weightedValue: weightedPipelineValue,
+      dealCount: activeDeals.length,
+      averageDealSize: parseFloat(averageDealSize.toFixed(2)),
+      conversionRate: parseFloat(conversionRate.toFixed(2)),
+    },
+    dealsByStage,
+    topPerformers,
+    velocity: {
+      avgDealCycle: 45, // Simplified for now
+    },
+    forecast: {
+      next90Days: weightedPipelineValue * 0.3, // Simplified forecast
+      dealCount: activeDeals.filter((d) => d.probability >= 70).length,
+    },
+    summary: {
+      totalDeals: deals.length,
+      wonDeals: wonDeals.length,
+      lostDeals: lostDeals.length,
+      activeDeals: activeDeals.length,
+    },
   };
 }
 
-export default function KPIsPage() {
-  const { data: session, status } = useSession();
-  const [kpis, setKpis] = useState<TeamKPIs | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function KPIsPage() {
+  const session = await getServerSession(authOptions);
 
-  useEffect(() => {
-    async function fetchKPIs() {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/kpis/team");
-        if (!response.ok) {
-          if (response.status === 403) {
-            throw new Error("Access denied: Only Sales Leads can view team KPIs");
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setKpis(data);
-      } catch (e: any) {
-        setError(e.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    if (status === "authenticated" && isSalesLead(session)) {
-      fetchKPIs();
-    } else if (status === "authenticated" && !isSalesLead(session)) {
-      setError("Access denied: Only Sales Leads can view team KPIs");
-      setIsLoading(false);
-    }
-  }, [status, session]);
-
-  if (status === "loading" || isLoading) {
-    return (
-      <div className="p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Team KPIs</h1>
-        <div className="text-gray-600">Loading KPIs...</div>
-      </div>
-    );
+  // Redirect to login if not authenticated
+  if (!session) {
+    redirect("/login");
   }
 
-  if (error) {
+  // Only Sales Lead can access KPIs
+  if (!isSalesLead(session)) {
     return (
       <div className="p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Team KPIs</h1>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h2 className="text-xl font-bold text-red-900 mb-2">🚫 Access Denied</h2>
-          <p className="text-red-800 mb-4">{error}</p>
+          <p className="text-red-800 mb-4">
+            Team KPIs are only available for Sales Leads.
+          </p>
           <Link
             href="/"
             className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
@@ -121,14 +197,7 @@ export default function KPIsPage() {
     );
   }
 
-  if (!kpis) {
-    return (
-      <div className="p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Team KPIs</h1>
-        <div className="text-gray-600">No KPI data available</div>
-      </div>
-    );
-  }
+  const kpis = await getTeamKPIs();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("de-DE", {
@@ -258,4 +327,3 @@ export default function KPIsPage() {
     </div>
   );
 }
-
