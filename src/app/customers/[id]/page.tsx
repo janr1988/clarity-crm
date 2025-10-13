@@ -25,6 +25,14 @@ interface Customer {
     id: string;
     name: string;
   };
+  companyRef?: {
+    id: string;
+    name: string;
+    industry?: string;
+    size?: string;
+    website?: string;
+    city?: string;
+  };
   activities: Array<{
     id: string;
     type: string;
@@ -180,8 +188,10 @@ export default function CustomerDetailPage() {
                 >
                   {customer.status}
                 </span>
-                {customer.company && (
-                  <span className="text-gray-600">{customer.company}</span>
+                {(customer.companyRef?.name || customer.company) && (
+                  <span className="text-gray-600">
+                    {customer.companyRef?.name || customer.company}
+                  </span>
                 )}
               </div>
             </div>
@@ -224,12 +234,28 @@ export default function CustomerDetailPage() {
                     <p className="text-gray-900">{customer.phone}</p>
                   </div>
                 )}
-                {customer.company && (
+                {(customer.companyRef?.name || customer.company) && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Company
                     </label>
-                    <p className="text-gray-900">{customer.company}</p>
+                    <p className="text-gray-900">
+                      {customer.companyRef?.name || customer.company}
+                    </p>
+                    {customer.companyRef && (
+                      <div className="mt-2 flex gap-2">
+                        {customer.companyRef.industry && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {customer.companyRef.industry}
+                          </span>
+                        )}
+                        {customer.companyRef.size && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {customer.companyRef.size}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 {customer.position && (

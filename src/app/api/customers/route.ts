@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
             { name: { contains: search, mode: "insensitive" } },
             { company: { contains: search, mode: "insensitive" } },
             { email: { contains: search, mode: "insensitive" } },
+            { companyRef: { name: { contains: search, mode: "insensitive" } } },
           ],
         }),
       },
@@ -28,6 +29,9 @@ export async function GET(request: NextRequest) {
         },
         assignee: {
           select: { id: true, name: true, email: true },
+        },
+        companyRef: {
+          select: { id: true, name: true, industry: true, size: true },
         },
         _count: {
           select: {
@@ -66,6 +70,9 @@ export async function POST(request: NextRequest) {
         },
         assignee: {
           select: { id: true, name: true, email: true },
+        },
+        companyRef: {
+          select: { id: true, name: true, industry: true, size: true },
         },
         _count: {
           select: {

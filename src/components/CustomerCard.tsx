@@ -23,6 +23,12 @@ interface Customer {
     id: string;
     name: string;
   };
+  companyRef?: {
+    id: string;
+    name: string;
+    industry?: string;
+    size?: string;
+  };
   _count: {
     activities: number;
     callNotes: number;
@@ -66,8 +72,10 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
             <h3 className="text-lg font-semibold text-gray-900 mb-1">
               {customer.name}
             </h3>
-            {customer.company && (
-              <p className="text-sm text-gray-600 mb-1">{customer.company}</p>
+            {(customer.companyRef?.name || customer.company) && (
+              <p className="text-sm text-gray-600 mb-1">
+                {customer.companyRef?.name || customer.company}
+              </p>
             )}
             {customer.position && (
               <p className="text-sm text-gray-500">{customer.position}</p>

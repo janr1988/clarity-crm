@@ -17,6 +17,9 @@ export async function GET(
         assignee: {
           select: { id: true, name: true, email: true },
         },
+        companyRef: {
+          select: { id: true, name: true, industry: true, size: true, website: true, city: true },
+        },
         activities: {
           orderBy: { createdAt: "desc" },
           take: 10,

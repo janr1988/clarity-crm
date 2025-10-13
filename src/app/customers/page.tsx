@@ -4,11 +4,20 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import CustomerCard from "@/components/CustomerCard";
 import { Customer } from "@prisma/client";
+
+interface CustomerWithCompany extends Customer {
+  companyRef?: {
+    id: string;
+    name: string;
+    industry?: string;
+    size?: string;
+  };
+}
 import { useSession } from "next-auth/react";
 
 export default function CustomersPage() {
   const { data: session } = useSession();
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<CustomerWithCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,6 +70,7 @@ export default function CustomersPage() {
       customer.email?.toLowerCase().includes(searchLower) ||
       customer.phone?.toLowerCase().includes(searchLower) ||
       customer.company?.toLowerCase().includes(searchLower) ||
+      customer.companyRef?.name.toLowerCase().includes(searchLower) ||
       customer.position?.toLowerCase().includes(searchLower) ||
       customer.source?.toLowerCase().includes(searchLower) ||
       customer.notes?.toLowerCase().includes(searchLower)
