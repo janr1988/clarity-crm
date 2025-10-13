@@ -24,10 +24,12 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  tasksAssigned   Task[]     @relation("AssignedTasks")
-  tasksCreated    Task[]     @relation("CreatedTasks")
-  activities      Activity[]
-  callNotes       CallNote[]
+  tasksAssigned      Task[]      @relation("AssignedTasks")
+  tasksCreated       Task[]      @relation("CreatedTasks")
+  activities         Activity[]
+  callNotes          CallNote[]
+  customersCreated   Customer[]  @relation("CustomerCreator")
+  customersAssigned  Customer[]  @relation("CustomerAssignee")
 
   @@index([teamId])
   @@index([role])
@@ -58,6 +60,8 @@ model Task {
   createdBy   User     @relation("CreatedTasks", fields: [createdById], references: [id])
   teamId      String?
   team        Team?    @relation(fields: [teamId], references: [id])
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -65,6 +69,7 @@ model Task {
   @@index([createdById])
   @@index([status])
   @@index([teamId])
+  @@index([customerId])
 }
 
 model Activity {
@@ -75,10 +80,13 @@ model Activity {
   duration    Int? // in minutes
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
+  @@index([customerId])
   @@index([createdAt])
 }
 
@@ -94,10 +102,42 @@ model CallNote {
   followUpDate   DateTime?
   userId         String
   user           User     @relation(fields: [userId], references: [id])
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([userId])
+  @@index([customerId])
   @@index([createdAt])
+}
+
+model Customer {
+  id          String   @id @default(uuid())
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  position    String?
+  status      String   @default("LEAD") // LEAD, PROSPECT, CUSTOMER, INACTIVE
+  source      String?  // WEBSITE, REFERRAL, COLD_CALL, SOCIAL_MEDIA, TRADE_SHOW, OTHER
+  value       Float?   // Deal value in EUR
+  notes       String?
+  assignedTo  String?  // Sales Agent ID
+  createdBy   String   // Creator ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  activities  Activity[]
+  callNotes   CallNote[]
+  tasks       Task[]
+  creator     User     @relation("CustomerCreator", fields: [createdBy], references: [id])
+  assignee    User?    @relation("CustomerAssignee", fields: [assignedTo], references: [id])
+
+  @@index([assignedTo])
+  @@index([createdBy])
+  @@index([status])
+  @@index([company])
 }
 

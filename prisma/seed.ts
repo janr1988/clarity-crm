@@ -179,6 +179,78 @@ async function main() {
     ],
   });
 
+  // Create customers
+  const customerSources = ["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"];
+  const customerStatuses = ["LEAD", "PROSPECT", "CUSTOMER", "INACTIVE"];
+  const companies = [
+    "TechCorp GmbH", "Innovate Solutions", "Digital Dynamics", "Future Systems", "Smart Technologies",
+    "Cloud Innovations", "Data Analytics Inc", "Software Solutions", "IT Consulting Group", "TechStart AG",
+    "Business Intelligence Ltd", "Digital Transformation Co", "Enterprise Software", "Cyber Security Pro", "AI Solutions",
+    "Blockchain Technologies", "Mobile Development", "Web Services AG", "Database Systems", "Network Solutions",
+    "Automation Experts", "Machine Learning Corp", "IoT Innovations", "Cloud Computing Ltd", "DevOps Solutions",
+    "API Development", "Microservices AG", "Container Technologies", "Serverless Solutions", "Edge Computing",
+    "Quantum Technologies", "AR/VR Solutions", "Gaming Studios", "E-commerce Platforms", "Fintech Solutions",
+    "HealthTech Innovations", "EdTech Solutions", "GreenTech AG", "CleanTech Ltd", "BioTech Corp",
+    "Space Technologies", "Robotics Solutions", "Automotive Tech", "Energy Solutions", "Manufacturing 4.0",
+    "Supply Chain Tech", "Logistics Solutions", "Retail Technology", "Marketing Automation", "SalesTech Pro"
+  ];
+  
+  const positions = [
+    "CEO", "CTO", "CFO", "VP Sales", "VP Marketing", "VP Engineering", "Head of Product", "Sales Director",
+    "Marketing Director", "Engineering Manager", "Product Manager", "Business Development", "Account Manager",
+    "Sales Manager", "Marketing Manager", "Project Manager", "Technical Lead", "Software Architect", "DevOps Engineer",
+    "Data Scientist", "UX Designer", "Business Analyst", "Operations Manager", "Finance Manager", "HR Manager"
+  ];
+
+  const firstNames = [
+    "Alexander", "Benjamin", "Christian", "Daniel", "Erik", "Florian", "Gabriel", "Henrik", "Igor", "Jakob",
+    "Klaus", "Lukas", "Markus", "Niklas", "Oliver", "Patrick", "Quentin", "Robert", "Sebastian", "Thomas",
+    "Ulrich", "Vincent", "Wolfgang", "Xavier", "Yannick", "Zacharias", "Anna", "Barbara", "Claudia", "Diana",
+    "Elena", "Franziska", "Gabriele", "Helena", "Isabella", "Julia", "Katharina", "Laura", "Maria", "Nina",
+    "Olivia", "Patricia", "Rachel", "Sandra", "Tanja", "Ulrike", "Veronika", "Wendy", "Xenia", "Yvonne", "Zoe"
+  ];
+
+  const lastNames = [
+    "Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann",
+    "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann",
+    "Braun", "Krüger", "Hofmann", "Lange", "Schmitt", "Werner", "Schmitz", "Krause", "Meier", "Lehmann",
+    "Schmid", "Schulze", "Maier", "Köhler", "Herrmann", "König", "Walter", "Mayer", "Huber", "Kaiser",
+    "Fuchs", "Peters", "Lang", "Scholz", "Möller", "Weiß", "Jung", "Hahn", "Schubert", "Schwarz"
+  ];
+
+  const customers = [];
+  
+  for (let i = 0; i < 50; i++) {
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const company = companies[Math.floor(Math.random() * companies.length)];
+    const position = positions[Math.floor(Math.random() * positions.length)];
+    const source = customerSources[Math.floor(Math.random() * customerSources.length)];
+    const status = customerStatuses[Math.floor(Math.random() * customerStatuses.length)];
+    const assignedUser = Math.random() > 0.3 ? [agent1.id, agent2.id, agent3.id][Math.floor(Math.random() * 3)] : null;
+    const value = status === "CUSTOMER" ? Math.floor(Math.random() * 100000) + 10000 : (Math.random() > 0.7 ? Math.floor(Math.random() * 50000) + 5000 : null);
+
+    customers.push({
+      name: `${firstName} ${lastName}`,
+      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${company.toLowerCase().replace(/[^a-z]/g, '')}.com`,
+      phone: `+49 ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 9000) + 1000}${Math.floor(Math.random() * 9000) + 1000}`,
+      company: company,
+      position: position,
+      status: status,
+      source: source,
+      value: value,
+      notes: Math.random() > 0.5 ? `Interested in ${Math.random() > 0.5 ? 'enterprise' : 'standard'} solution. ${Math.random() > 0.5 ? 'Budget approved.' : 'Needs approval.'}` : null,
+      assignedTo: assignedUser,
+      createdBy: [salesLead.id, agent1.id, agent2.id, agent3.id][Math.floor(Math.random() * 4)],
+    });
+  }
+
+  await prisma.customer.createMany({
+    data: customers,
+  });
+
+  console.log(`✅ Created ${customers.length} customers`);
+
   console.log("✅ Database seeded successfully!");
 }
 

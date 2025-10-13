@@ -90,6 +90,33 @@ export const updateTeamSchema = z.object({
   description: z.string().optional(),
 });
 
+// Customer schemas
+export const createCustomerSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  company: z.string().optional().or(z.literal("")),
+  position: z.string().optional().or(z.literal("")),
+  status: z.enum(["LEAD", "PROSPECT", "CUSTOMER", "INACTIVE"]),
+  source: z.enum(["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"]).optional(),
+  value: z.number().positive().optional(),
+  notes: z.string().optional().or(z.literal("")),
+  assignedTo: z.string().uuid().optional(),
+});
+
+export const updateCustomerSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  company: z.string().optional().or(z.literal("")),
+  position: z.string().optional().or(z.literal("")),
+  status: z.enum(["LEAD", "PROSPECT", "CUSTOMER", "INACTIVE"]).optional(),
+  source: z.enum(["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"]).optional(),
+  value: z.number().positive().optional(),
+  notes: z.string().optional().or(z.literal("")),
+  assignedTo: z.string().uuid().optional(),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
@@ -100,4 +127,6 @@ export type CreateCallNoteInput = z.infer<typeof createCallNoteSchema>;
 export type UpdateCallNoteInput = z.infer<typeof updateCallNoteSchema>;
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 export type UpdateTeamInput = z.infer<typeof updateTeamSchema>;
+export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
+export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
 

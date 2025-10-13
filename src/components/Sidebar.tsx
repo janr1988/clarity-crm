@@ -8,6 +8,7 @@ import { cn, getInitials } from "@/lib/utils";
 const navigation = [
   { name: "Dashboard", href: "/", icon: "📊" },
   { name: "AI Insights", href: "/insights", icon: "🤖" },
+  { name: "Customers", href: "/customers", icon: "👤" },
   { name: "Team", href: "/users", icon: "👥" },
   { name: "Tasks", href: "/tasks", icon: "✓" },
   { name: "Activities", href: "/activities", icon: "📋" },
