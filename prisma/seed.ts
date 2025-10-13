@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -16,6 +17,10 @@ async function main() {
     },
   });
 
+  // Hash passwords for demo users
+  const leadPassword = await bcrypt.hash("lead123", 10);
+  const agentPassword = await bcrypt.hash("agent123", 10);
+
   // Create users
   const salesLead = await prisma.user.upsert({
     where: { email: "lead@clarity.com" },
@@ -23,6 +28,7 @@ async function main() {
     create: {
       email: "lead@clarity.com",
       name: "Sarah Thompson",
+      password: leadPassword,
       role: "SALES_LEAD",
       teamId: salesTeam.id,
       isActive: true,
@@ -35,6 +41,7 @@ async function main() {
     create: {
       email: "john@clarity.com",
       name: "John Davis",
+      password: agentPassword,
       role: "SALES_AGENT",
       teamId: salesTeam.id,
       isActive: true,
@@ -47,6 +54,7 @@ async function main() {
     create: {
       email: "emma@clarity.com",
       name: "Emma Wilson",
+      password: agentPassword,
       role: "SALES_AGENT",
       teamId: salesTeam.id,
       isActive: true,
@@ -59,6 +67,7 @@ async function main() {
     create: {
       email: "mike@clarity.com",
       name: "Mike Chen",
+      password: agentPassword,
       role: "SALES_AGENT",
       teamId: salesTeam.id,
       isActive: true,

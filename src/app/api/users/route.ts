@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createUserSchema } from "@/lib/validation";
 import { ZodError } from "zod";
+import bcrypt from "bcryptjs";
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +28,10 @@ export async function GET(request: NextRequest) {
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(users);
+    // Remove passwords from response
+    const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+
+    return NextResponse.json(usersWithoutPasswords);
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
@@ -42,14 +46,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createUserSchema.parse(body);
 
+    // Hash password before saving
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+
     const user = await prisma.user.create({
-      data: validatedData,
+      data: {
+        ...validatedData,
+        password: hashedPassword,
+      },
       include: {
         team: true,
       },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    // Remove password from response
+    const { password, ...userWithoutPassword } = user;
+
+    return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(

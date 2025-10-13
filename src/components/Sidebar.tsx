@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { useSession, signOut } from "next-auth/react";
+import { cn, getInitials } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: "📊" },
@@ -15,6 +16,11 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" });
+  };
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -47,19 +53,29 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
-            ST
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">
-              Sarah Thompson
+      {session?.user && (
+        <div className="p-4 border-t border-gray-200">
+          <div className="flex items-center gap-3 px-4 py-3 mb-2">
+            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
+              {getInitials(session.user.name)}
             </div>
-            <div className="text-xs text-gray-500">Sales Lead</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-gray-900 truncate">
+                {session.user.name}
+              </div>
+              <div className="text-xs text-gray-500 truncate">
+                {session.user.role.replace("_", " ")}
+              </div>
+            </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
+          >
+            Abmelden
+          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
