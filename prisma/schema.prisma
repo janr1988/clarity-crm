@@ -30,6 +30,8 @@ model User {
   callNotes          CallNote[]
   customersCreated   Customer[]  @relation("CustomerCreator")
   customersAssigned  Customer[]  @relation("CustomerAssignee")
+  companiesCreated   Company[]   @relation("CompanyCreator")
+  companiesAssigned  Company[]   @relation("CompanyAssignee")
 
   @@index([teamId])
   @@index([role])
@@ -62,6 +64,8 @@ model Task {
   team        Team?    @relation(fields: [teamId], references: [id])
   customerId  String?
   customer    Customer? @relation(fields: [customerId], references: [id])
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -70,6 +74,7 @@ model Task {
   @@index([status])
   @@index([teamId])
   @@index([customerId])
+  @@index([companyId])
 }
 
 model Activity {
@@ -82,11 +87,14 @@ model Activity {
   user        User     @relation(fields: [userId], references: [id])
   customerId  String?
   customer    Customer? @relation(fields: [customerId], references: [id])
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([customerId])
+  @@index([companyId])
   @@index([createdAt])
 }
 
@@ -125,6 +133,7 @@ model Customer {
   notes       String?
   assignedTo  String?  // Sales Agent ID
   createdBy   String   // Creator ID
+  companyId   String?  // Company ID reference
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -134,10 +143,48 @@ model Customer {
   tasks       Task[]
   creator     User     @relation("CustomerCreator", fields: [createdBy], references: [id])
   assignee    User?    @relation("CustomerAssignee", fields: [assignedTo], references: [id])
+  companyRef  Company? @relation(fields: [companyId], references: [id])
 
   @@index([assignedTo])
   @@index([createdBy])
   @@index([status])
   @@index([company])
+  @@index([companyId])
+}
+
+model Company {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  industry        String?  // TECHNOLOGY, FINANCE, HEALTHCARE, MANUFACTURING, RETAIL, etc.
+  size            String?  // STARTUP, SMALL, MEDIUM, LARGE, ENTERPRISE
+  revenue         Float?   // Annual revenue in EUR
+  employees       Int?     // Number of employees
+  website         String?
+  address         String?
+  city            String?
+  country         String?
+  phone           String?
+  email           String?
+  description     String?
+  status          String   @default("ACTIVE") // ACTIVE, INACTIVE, PROSPECT, PARTNER
+  foundedYear     Int?
+  lastContact     DateTime?
+  assignedTo      String?  // Sales Agent ID
+  createdBy       String   // Creator ID
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  customers       Customer[]
+  activities      Activity[]
+  tasks           Task[]
+  creator         User     @relation("CompanyCreator", fields: [createdBy], references: [id])
+  assignee        User?    @relation("CompanyAssignee", fields: [assignedTo], references: [id])
+
+  @@index([assignedTo])
+  @@index([createdBy])
+  @@index([industry])
+  @@index([status])
+  @@index([size])
 }
 

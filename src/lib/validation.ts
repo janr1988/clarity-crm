@@ -115,6 +115,52 @@ export const updateCustomerSchema = z.object({
   value: z.number().positive().optional(),
   notes: z.string().optional().or(z.literal("")),
   assignedTo: z.string().uuid().optional(),
+  companyId: z.string().uuid().optional(),
+});
+
+// Company schemas
+export const createCompanySchema = z.object({
+  name: z.string().min(2, "Company name must be at least 2 characters"),
+  industry: z.enum([
+    "TECHNOLOGY", "FINANCE", "HEALTHCARE", "MANUFACTURING", "RETAIL", 
+    "EDUCATION", "ENERGY", "AUTOMOTIVE", "AEROSPACE", "CONSTRUCTION",
+    "FOOD_BEVERAGE", "PHARMACEUTICALS", "TELECOMMUNICATIONS", "MEDIA", "TRANSPORTATION"
+  ]).optional(),
+  size: z.enum(["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"]).optional(),
+  revenue: z.number().positive().optional(),
+  employees: z.number().int().positive().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  email: z.string().email().optional().or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
+  status: z.enum(["ACTIVE", "PROSPECT", "PARTNER", "INACTIVE"]).optional(),
+  foundedYear: z.number().int().min(1800).max(new Date().getFullYear()).optional(),
+  assignedTo: z.string().uuid().optional(),
+});
+
+export const updateCompanySchema = z.object({
+  name: z.string().min(2).optional(),
+  industry: z.enum([
+    "TECHNOLOGY", "FINANCE", "HEALTHCARE", "MANUFACTURING", "RETAIL", 
+    "EDUCATION", "ENERGY", "AUTOMOTIVE", "AEROSPACE", "CONSTRUCTION",
+    "FOOD_BEVERAGE", "PHARMACEUTICALS", "TELECOMMUNICATIONS", "MEDIA", "TRANSPORTATION"
+  ]).optional(),
+  size: z.enum(["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"]).optional(),
+  revenue: z.number().positive().optional(),
+  employees: z.number().int().positive().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  email: z.string().email().optional().or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
+  status: z.enum(["ACTIVE", "PROSPECT", "PARTNER", "INACTIVE"]).optional(),
+  foundedYear: z.number().int().min(1800).max(new Date().getFullYear()).optional(),
+  assignedTo: z.string().uuid().optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -129,4 +175,6 @@ export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 export type UpdateTeamInput = z.infer<typeof updateTeamSchema>;
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
+export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
+export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
 

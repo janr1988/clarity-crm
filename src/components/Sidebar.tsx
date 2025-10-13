@@ -5,15 +5,16 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { cn, getInitials } from "@/lib/utils";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: "📊" },
-  { name: "AI Insights", href: "/insights", icon: "🤖" },
-  { name: "Customers", href: "/customers", icon: "👤" },
-  { name: "Team", href: "/users", icon: "👥" },
-  { name: "Tasks", href: "/tasks", icon: "✓" },
-  { name: "Activities", href: "/activities", icon: "📋" },
-  { name: "Call Notes", href: "/call-notes", icon: "📞" },
-];
+  const navigation = [
+    { name: "Dashboard", href: "/", icon: "📊" },
+    { name: "AI Insights", href: "/insights", icon: "🤖" },
+    { name: "Companies", href: "/companies", icon: "🏢" },
+    { name: "Customers", href: "/customers", icon: "👤" },
+    { name: "Team", href: "/users", icon: "👥" },
+    { name: "Tasks", href: "/tasks", icon: "✓" },
+    { name: "Activities", href: "/activities", icon: "📋" },
+    { name: "Call Notes", href: "/call-notes", icon: "📞" },
+  ];
 
 export default function Sidebar() {
   const pathname = usePathname();
