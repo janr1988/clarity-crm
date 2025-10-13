@@ -3,162 +3,176 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import CustomerCard from "@/components/CustomerCard";
-
-interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  status: string;
-  source?: string;
-  value?: number;
-  notes?: string;
-  assignedTo?: string;
-  createdAt: string;
-  creator?: {
-    id: string;
-    name: string;
-  };
-  assignee?: {
-    id: string;
-    name: string;
-  };
-  _count: {
-    activities: number;
-    callNotes: number;
-    tasks: number;
-  };
-}
+import { Customer } from "@prisma/client";
+import { useSession } from "next-auth/react";
 
 export default function CustomersPage() {
+  const { data: session } = useSession();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [assignedToFilter, setAssignedToFilter] = useState("");
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
-
-  const fetchCustomers = async () => {
-    try {
-      setIsLoading(true);
-      const params = new URLSearchParams();
-      if (statusFilter) params.append("status", statusFilter);
-      if (searchTerm) params.append("search", searchTerm);
-
-      const response = await fetch(`/api/customers?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch customers");
-      
-      const data = await response.json();
-      setCustomers(data);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
+    async function fetchCustomers() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const params = new URLSearchParams();
+        if (statusFilter) params.append("status", statusFilter);
+        if (sourceFilter) params.append("source", sourceFilter);
+        if (assignedToFilter) params.append("assignedTo", assignedToFilter);
+        
+        const response = await fetch(`/api/customers?${params.toString()}`);
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Please log in to view customers");
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCustomers(data);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    // Only fetch if session is available and not loading
+    if (session && session.user) {
+      fetchCustomers();
+    } else if (session === null) {
+      // Session is confirmed to be null (not loading)
+      setError("Please log in to view customers");
       setIsLoading(false);
     }
-  };
+  }, [session, statusFilter, sourceFilter, assignedToFilter]);
 
-  const handleSearch = () => {
-    fetchCustomers();
-  };
+  const filteredCustomers = customers.filter(customer => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      customer.name.toLowerCase().includes(searchLower) ||
+      customer.email?.toLowerCase().includes(searchLower) ||
+      customer.phone?.toLowerCase().includes(searchLower) ||
+      customer.company?.toLowerCase().includes(searchLower) ||
+      customer.position?.toLowerCase().includes(searchLower) ||
+      customer.source?.toLowerCase().includes(searchLower) ||
+      customer.notes?.toLowerCase().includes(searchLower)
+    );
+  });
 
-  const clearFilters = () => {
-    setSearchTerm("");
-    setStatusFilter("");
-    fetchCustomers();
-  };
+  const statusCounts = customers.reduce((acc, customer) => {
+    const status = customer.status || "UNKNOWN";
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const getStatusCounts = () => {
-    const counts = customers.reduce((acc, customer) => {
-      acc[customer.status] = (acc[customer.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    return counts;
-  };
+  const sourceCounts = customers.reduce((acc, customer) => {
+    const source = customer.source || "UNKNOWN";
+    acc[source] = (acc[source] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const statusCounts = getStatusCounts();
-
-  if (isLoading) {
+  // Show loading state while session is being determined or data is loading
+  if (isLoading || (session === undefined)) {
     return (
       <div className="p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Customers</h2>
+        <div className="text-gray-600">Loading customers...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Customers</h2>
+        <div className="text-red-600">Error: {error}</div>
       </div>
     );
   }
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your customer relationships and track deals
-          </p>
-        </div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Customers</h2>
         <Link
           href="/customers/new"
-          className="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
         >
-          + Add Customer
+          <span className="mr-2">➕</span>
+          New Customer
         </Link>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-blue-600">{customers.length}</div>
+          <div className="text-sm text-gray-600">Total Customers</div>
         </div>
-      )}
-
-      {/* Status Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { status: "LEAD", label: "Leads", color: "bg-blue-500" },
-          { status: "PROSPECT", label: "Prospects", color: "bg-yellow-500" },
-          { status: "CUSTOMER", label: "Customers", color: "bg-green-500" },
-          { status: "INACTIVE", label: "Inactive", color: "bg-gray-500" },
-        ].map(({ status, label, color }) => (
-          <div key={status} className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">{label}</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {statusCounts[status] || 0}
-                </p>
-              </div>
-              <div className={`w-3 h-3 rounded-full ${color}`}></div>
-            </div>
-          </div>
-        ))}
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-green-600">{statusCounts.CUSTOMER || 0}</div>
+          <div className="text-sm text-gray-600">Active Customers</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-yellow-600">{statusCounts.PROSPECT || 0}</div>
+          <div className="text-sm text-gray-600">Prospects</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-blue-600">{statusCounts.LEAD || 0}</div>
+          <div className="text-sm text-gray-600">Leads</div>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* Search and Filters */}
+      <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 mb-4">
           <div className="flex-1">
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+              🔍 Search Customers
+            </label>
             <input
               type="text"
-              placeholder="Search customers by name, company, or email..."
+              id="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              placeholder="Search by name, email, company, position, or notes..."
             />
           </div>
+          
+          <div className="flex gap-2 items-end">
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("");
+                setSourceFilter("");
+                setAssignedToFilter("");
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+              📊 Status
+            </label>
             <select
+              id="status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
             >
               <option value="">All Statuses</option>
               <option value="LEAD">Lead</option>
@@ -167,43 +181,82 @@ export default function CustomersPage() {
               <option value="INACTIVE">Inactive</option>
             </select>
           </div>
-          <button
-            onClick={handleSearch}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
-          >
-            Search
-          </button>
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
-          >
-            Clear
-          </button>
+
+          <div>
+            <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-2">
+              📍 Source
+            </label>
+            <select
+              id="source"
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            >
+              <option value="">All Sources</option>
+              <option value="WEBSITE">Website</option>
+              <option value="REFERRAL">Referral</option>
+              <option value="COLD_CALL">Cold Call</option>
+              <option value="SOCIAL_MEDIA">Social Media</option>
+              <option value="TRADE_SHOW">Trade Show</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-2">
+              👤 Assigned To
+            </label>
+            <select
+              id="assignedTo"
+              value={assignedToFilter}
+              onChange={(e) => setAssignedToFilter(e.target.value)}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            >
+              <option value="">All Assignees</option>
+              <option value="unassigned">Unassigned</option>
+              {/* TODO: Add dynamic user list */}
+            </select>
+          </div>
         </div>
+
+        {/* Active Filters Display */}
+        {(searchTerm || statusFilter || sourceFilter || assignedToFilter) && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-gray-600">Active filters:</span>
+              {searchTerm && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  Search: "{searchTerm}" ×
+                </span>
+              )}
+              {statusFilter && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Status: {statusFilter} ×
+                </span>
+              )}
+              {sourceFilter && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  Source: {sourceFilter.replace("_", " ")} ×
+                </span>
+              )}
+              {assignedToFilter && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Assigned: {assignedToFilter} ×
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Customers Grid */}
-      {customers.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">👤</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            No customers found
-          </h3>
-          <p className="text-gray-600 mb-6">
-            {searchTerm || statusFilter
-              ? "Try adjusting your search criteria"
-              : "Get started by adding your first customer"}
-          </p>
-          <Link
-            href="/customers/new"
-            className="px-6 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"
-          >
-            Add Customer
-          </Link>
+      {/* Customer Cards */}
+      {filteredCustomers.length === 0 ? (
+        <div className="text-gray-600">
+          {customers.length === 0 ? "No customers found." : "No customers match your search criteria."}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {customers.map((customer) => (
+          {filteredCustomers.map((customer) => (
             <CustomerCard key={customer.id} customer={customer} />
           ))}
         </div>

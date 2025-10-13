@@ -53,12 +53,22 @@ export default function CompaniesPage() {
     }
   }, [session, industryFilter, sizeFilter, statusFilter]);
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.industry?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompanies = companies.filter(company => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      company.name.toLowerCase().includes(searchLower) ||
+      company.city?.toLowerCase().includes(searchLower) ||
+      company.country?.toLowerCase().includes(searchLower) ||
+      company.industry?.toLowerCase().includes(searchLower) ||
+      company.website?.toLowerCase().includes(searchLower) ||
+      company.email?.toLowerCase().includes(searchLower) ||
+      company.phone?.toLowerCase().includes(searchLower) ||
+      company.description?.toLowerCase().includes(searchLower) ||
+      company.address?.toLowerCase().includes(searchLower)
+    );
+  });
 
   const statusCounts = companies.reduce((acc, company) => {
     const status = company.status || "UNKNOWN";
@@ -124,12 +134,12 @@ export default function CompaniesPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-              Search
+      {/* Search and Filters */}
+      <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 mb-4">
+          <div className="flex-1">
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+              🔍 Search Companies
             </label>
             <input
               type="text"
@@ -137,13 +147,29 @@ export default function CompaniesPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              placeholder="Search companies..."
+              placeholder="Search by name, city, industry, or website..."
             />
           </div>
           
+          <div className="flex gap-2 items-end">
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setIndustryFilter("");
+                setSizeFilter("");
+                setStatusFilter("");
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
-              Industry
+            <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-2">
+              🏭 Industry
             </label>
             <select
               id="industry"
@@ -171,8 +197,8 @@ export default function CompaniesPage() {
           </div>
 
           <div>
-            <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
-              Size
+            <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-2">
+              📏 Company Size
             </label>
             <select
               id="size"
@@ -190,8 +216,8 @@ export default function CompaniesPage() {
           </div>
 
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+              📊 Status
             </label>
             <select
               id="status"
@@ -207,6 +233,35 @@ export default function CompaniesPage() {
             </select>
           </div>
         </div>
+
+        {/* Active Filters Display */}
+        {(searchTerm || industryFilter || sizeFilter || statusFilter) && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-gray-600">Active filters:</span>
+              {searchTerm && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  Search: "{searchTerm}" ×
+                </span>
+              )}
+              {industryFilter && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Industry: {industryFilter.replace("_", " ")} ×
+                </span>
+              )}
+              {sizeFilter && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  Size: {sizeFilter} ×
+                </span>
+              )}
+              {statusFilter && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Status: {statusFilter} ×
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Company Cards */}
