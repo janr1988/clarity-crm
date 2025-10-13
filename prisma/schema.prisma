@@ -32,6 +32,10 @@ model User {
   customersAssigned  Customer[]  @relation("CustomerAssignee")
   companiesCreated   Company[]   @relation("CompanyCreator")
   companiesAssigned  Company[]   @relation("CompanyAssignee")
+  dealsOwned         Deal[]      @relation("DealOwner")
+  dealsCreated       Deal[]      @relation("DealCreator")
+  dealNotes          DealNote[]
+  targets            Target[]
 
   @@index([teamId])
   @@index([role])
@@ -141,6 +145,7 @@ model Customer {
   activities  Activity[]
   callNotes   CallNote[]
   tasks       Task[]
+  deals       Deal[]
   creator     User     @relation("CustomerCreator", fields: [createdBy], references: [id])
   assignee    User?    @relation("CustomerAssignee", fields: [assignedTo], references: [id])
   companyRef  Company? @relation(fields: [companyId], references: [id])
@@ -178,6 +183,7 @@ model Company {
   customers       Customer[]
   activities      Activity[]
   tasks           Task[]
+  deals           Deal[]
   creator         User     @relation("CompanyCreator", fields: [createdBy], references: [id])
   assignee        User?    @relation("CompanyAssignee", fields: [assignedTo], references: [id])
 
@@ -186,5 +192,80 @@ model Company {
   @@index([industry])
   @@index([status])
   @@index([size])
+}
+
+// Deal/Opportunity Model
+model Deal {
+  id                  String    @id @default(uuid())
+  name                String
+  customerId          String
+  companyId           String
+  value               Float     // Deal value in EUR
+  probability         Int       @default(50) // 0-100%
+  stage               String    @default("PROSPECTING") // PROSPECTING, QUALIFICATION, PROPOSAL, NEGOTIATION, CLOSED_WON, CLOSED_LOST
+  expectedCloseDate   DateTime?
+  actualCloseDate     DateTime?
+  source              String?   // Where did this deal come from
+  description         String?
+  lostReason          String?   // If CLOSED_LOST
+  
+  // Sales metrics
+  daysInStage         Int?      // Days in current stage
+  totalDuration       Int?      // Total days from creation to close
+  
+  // Ownership
+  ownerId             String    // Sales Agent
+  createdBy           String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  // Relations
+  customer            Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  company             Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  owner               User      @relation("DealOwner", fields: [ownerId], references: [id])
+  creator             User      @relation("DealCreator", fields: [createdBy], references: [id])
+  notes               DealNote[]
+  
+  @@index([ownerId])
+  @@index([stage])
+  @@index([customerId])
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+// Deal Notes/Updates
+model DealNote {
+  id        String   @id @default(uuid())
+  dealId    String
+  content   String
+  userId    String
+  createdAt DateTime @default(now())
+  
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@index([dealId])
+  @@index([userId])
+}
+
+// Revenue Targets
+model Target {
+  id          String   @id @default(uuid())
+  userId      String?  // Null = Team target
+  period      String   // MONTHLY, QUARTERLY, YEARLY
+  year        Int
+  quarter     Int?     // 1-4
+  month       Int?     // 1-12
+  targetValue Float    // Target revenue in EUR
+  actualValue Float    @default(0)
+  
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, period, year, quarter, month])
+  @@index([userId])
+  @@index([period])
+  @@index([year])
 }
 
