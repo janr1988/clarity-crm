@@ -2,9 +2,9 @@
 
 import { 
   MagnifyingGlassIcon,
-  UserCheckIcon,
+  UserIcon,
   DocumentTextIcon,
-  HandshakeIcon,
+  CurrencyEuroIcon,
   CheckCircleIcon,
   XCircleIcon
 } from "@heroicons/react/24/outline";
@@ -48,7 +48,7 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
     },
     QUALIFICATION: {
       label: "Qualification",
-      icon: UserCheckIcon,
+      icon: UserIcon,
       bgGradient: "bg-gradient-to-r from-indigo-500 to-indigo-600",
       textColor: "text-indigo-700",
       bgColor: "bg-indigo-50"
@@ -62,7 +62,7 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
     },
     NEGOTIATION: {
       label: "Negotiation",
-      icon: HandshakeIcon,
+      icon: CurrencyEuroIcon,
       bgGradient: "bg-gradient-to-r from-pink-500 to-pink-600",
       textColor: "text-pink-700",
       bgColor: "bg-pink-50"
