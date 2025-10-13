@@ -18,6 +18,7 @@ export default function Sidebar() {
   const getNavigationItems = () => {
     const commonItems = [
       { name: "Dashboard", href: "/", icon: "📊" },
+      { name: "Deals", href: "/deals", icon: "💼" },
       { name: "Companies", href: "/companies", icon: "🏢" },
       { name: "Customers", href: "/customers", icon: "👤" },
       { name: "Tasks", href: "/tasks", icon: "✓" },
@@ -29,6 +30,7 @@ export default function Sidebar() {
     if (isSalesLead(session)) {
       return [
         commonItems[0], // Dashboard
+        { name: "KPIs", href: "/kpis", icon: "📈" },
         { name: "AI Insights", href: "/insights", icon: "🤖" },
         { name: "Team", href: "/users", icon: "👥" },
         ...commonItems.slice(1), // Rest of common items
