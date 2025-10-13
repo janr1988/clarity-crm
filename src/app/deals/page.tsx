@@ -203,12 +203,13 @@ export default async function DealsPage() {
               {deals.map((deal) => (
                 <tr
                   key={deal.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => (window.location.href = `/deals/${deal.id}`)}
+                  className="hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{deal.name}</div>
-                    <div className="text-sm text-gray-500">{deal.customer.name}</div>
+                    <Link href={`/deals/${deal.id}`} className="block">
+                      <div className="text-sm font-medium text-gray-900 hover:text-blue-600">{deal.name}</div>
+                      <div className="text-sm text-gray-500">{deal.customer.name}</div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{deal.company.name}</div>
