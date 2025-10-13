@@ -7,7 +7,9 @@ import RevenueCard from "@/components/RevenueCard";
 import PipelineFunnel from "@/components/PipelineFunnel";
 import TopPerformers from "@/components/TopPerformers";
 import PipelineMetrics from "@/components/PipelineMetrics";
-import { prisma } from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 async function getTeamKPIs() {
   const currentYear = new Date().getFullYear();

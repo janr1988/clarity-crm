@@ -3,7 +3,9 @@ import { authOptions } from "@/lib/auth";
 import { isSalesLead } from "@/lib/authorization";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 interface Deal {
   id: string;
