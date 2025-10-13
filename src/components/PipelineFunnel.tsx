@@ -104,7 +104,27 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
           const config = stageConfig[stage.stage] || stageConfig.PROSPECTING;
           const Icon = config.icon;
           const widthPercent = maxValue > 0 ? (stage.value / maxValue) * 100 : 0;
-          const conversionRate = index > 0 ? (stage.count / stages[index - 1].count) * 100 : 100;
+          
+          // Nur für aktive Pipeline Stages Conversion Rate berechnen
+          const isActiveStage = !['CLOSED_WON', 'CLOSED_LOST'].includes(stage.stage);
+          const showConversionRate = isActiveStage && index > 0;
+          const conversionRate = showConversionRate 
+            ? (stage.count / stages[index - 1].count) * 100 
+            : null;
+
+          // Spezielle Labels für Endpunkte
+          const getStatusLabel = () => {
+            switch (stage.stage) {
+              case 'CLOSED_WON':
+                return 'Closed Successfully';
+              case 'CLOSED_LOST':
+                return 'Lost';
+              default:
+                return null;
+            }
+          };
+
+          const statusLabel = getStatusLabel();
 
           return (
             <div key={stage.stage} className="relative group">
@@ -127,7 +147,15 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
                     {stage.count} deals
                   </div>
                   <div className="text-xs text-gray-500">
-                    {conversionRate.toFixed(0)}% conversion
+                    {showConversionRate ? (
+                      <span>{conversionRate.toFixed(0)}% conversion</span>
+                    ) : statusLabel ? (
+                      <span className={stage.stage === 'CLOSED_WON' ? 'text-green-600' : 'text-red-600'}>
+                        {statusLabel}
+                      </span>
+                    ) : (
+                      <span>Pipeline stage</span>
+                    )}
                   </div>
                 </div>
               </div>
