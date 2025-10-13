@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      String   @default("SALES_AGENT") // SALES_LEAD, SALES_AGENT, MANAGER
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id])
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tasksAssigned   Task[]     @relation("AssignedTasks")
+  tasksCreated    Task[]     @relation("CreatedTasks")
+  activities      Activity[]
+  callNotes       CallNote[]
+
+  @@index([teamId])
+  @@index([role])
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members User[]
+  tasks   Task[]
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      String   @default("TODO") // TODO, IN_PROGRESS, COMPLETED, CANCELLED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate     DateTime?
+  assigneeId  String?
+  assignee    User?    @relation("AssignedTasks", fields: [assigneeId], references: [id])
+  createdById String
+  createdBy   User     @relation("CreatedTasks", fields: [createdById], references: [id])
+  teamId      String?
+  team        Team?    @relation(fields: [teamId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([assigneeId])
+  @@index([createdById])
+  @@index([status])
+  @@index([teamId])
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  type        String   // CALL, MEETING, EMAIL, NOTE, OTHER
+  title       String
+  description String?
+  duration    Int? // in minutes
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model CallNote {
+  id             String   @id @default(uuid())
+  clientName     String
+  clientCompany  String?
+  phoneNumber    String?
+  notes          String
+  summary        String?
+  aiSummary      String?
+  outcome        String?
+  followUpDate   DateTime?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
