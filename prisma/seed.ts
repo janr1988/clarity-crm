@@ -179,27 +179,17 @@ async function main() {
     ],
   });
 
-  // Create customers
+  // Create customers (100 new customers assigned to companies)
   const customerSources = ["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"];
   const customerStatuses = ["LEAD", "PROSPECT", "CUSTOMER", "INACTIVE"];
-  const companyNames = [
-    "TechCorp GmbH", "Innovate Solutions", "Digital Dynamics", "Future Systems", "Smart Technologies",
-    "Cloud Innovations", "Data Analytics Inc", "Software Solutions", "IT Consulting Group", "TechStart AG",
-    "Business Intelligence Ltd", "Digital Transformation Co", "Enterprise Software", "Cyber Security Pro", "AI Solutions",
-    "Blockchain Technologies", "Mobile Development", "Web Services AG", "Database Systems", "Network Solutions",
-    "Automation Experts", "Machine Learning Corp", "IoT Innovations", "Cloud Computing Ltd", "DevOps Solutions",
-    "API Development", "Microservices AG", "Container Technologies", "Serverless Solutions", "Edge Computing",
-    "Quantum Technologies", "AR/VR Solutions", "Gaming Studios", "E-commerce Platforms", "Fintech Solutions",
-    "HealthTech Innovations", "EdTech Solutions", "GreenTech AG", "CleanTech Ltd", "BioTech Corp",
-    "Space Technologies", "Robotics Solutions", "Automotive Tech", "Energy Solutions", "Manufacturing 4.0",
-    "Supply Chain Tech", "Logistics Solutions", "Retail Technology", "Marketing Automation", "SalesTech Pro"
-  ];
   
   const positions = [
     "CEO", "CTO", "CFO", "VP Sales", "VP Marketing", "VP Engineering", "Head of Product", "Sales Director",
-    "Marketing Director", "Engineering Manager", "Product Manager", "Business Development", "Account Manager",
+    "Marketing Director", "Engineering Manager", "Product Manager", "Business Development Manager", "Account Manager",
     "Sales Manager", "Marketing Manager", "Project Manager", "Technical Lead", "Software Architect", "DevOps Engineer",
-    "Data Scientist", "UX Designer", "Business Analyst", "Operations Manager", "Finance Manager", "HR Manager"
+    "Data Scientist", "UX Designer", "Business Analyst", "Operations Manager", "Finance Manager", "HR Manager",
+    "Chief Innovation Officer", "Head of Strategy", "Regional Sales Manager", "Key Account Manager", "Solution Architect",
+    "Product Owner", "Scrum Master", "Quality Assurance Manager", "Customer Success Manager", "Partnership Manager"
   ];
 
   const firstNames = [
@@ -207,7 +197,10 @@ async function main() {
     "Klaus", "Lukas", "Markus", "Niklas", "Oliver", "Patrick", "Quentin", "Robert", "Sebastian", "Thomas",
     "Ulrich", "Vincent", "Wolfgang", "Xavier", "Yannick", "Zacharias", "Anna", "Barbara", "Claudia", "Diana",
     "Elena", "Franziska", "Gabriele", "Helena", "Isabella", "Julia", "Katharina", "Laura", "Maria", "Nina",
-    "Olivia", "Patricia", "Rachel", "Sandra", "Tanja", "Ulrike", "Veronika", "Wendy", "Xenia", "Yvonne", "Zoe"
+    "Olivia", "Patricia", "Rachel", "Sandra", "Tanja", "Ulrike", "Veronika", "Wendy", "Xenia", "Yvonne", "Zoe",
+    "Michael", "Stefan", "Andreas", "Martin", "Jürgen", "Hans", "Peter", "Klaus", "Wolfgang", "Josef",
+    "Franz", "Anton", "Johann", "Karl", "Josef", "Franz", "Anton", "Johann", "Karl", "Josef",
+    "Sabine", "Monika", "Petra", "Birgit", "Andrea", "Susanne", "Ingrid", "Ursula", "Elisabeth", "Gisela"
   ];
 
   const lastNames = [
@@ -215,33 +208,70 @@ async function main() {
     "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann",
     "Braun", "Krüger", "Hofmann", "Lange", "Schmitt", "Werner", "Schmitz", "Krause", "Meier", "Lehmann",
     "Schmid", "Schulze", "Maier", "Köhler", "Herrmann", "König", "Walter", "Mayer", "Huber", "Kaiser",
-    "Fuchs", "Peters", "Lang", "Scholz", "Möller", "Weiß", "Jung", "Hahn", "Schubert", "Schwarz"
+    "Fuchs", "Peters", "Lang", "Scholz", "Möller", "Weiß", "Jung", "Hahn", "Schubert", "Schwarz",
+    "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Braun", "Krüger", "Hofmann"
   ];
+
+  // Get all companies for assignment
+  const allCompanies = await prisma.company.findMany();
+  const companyIds = allCompanies.map(c => c.id);
 
   const customers = [];
   
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const company = companyNames[Math.floor(Math.random() * companyNames.length)];
     const position = positions[Math.floor(Math.random() * positions.length)];
     const source = customerSources[Math.floor(Math.random() * customerSources.length)];
-    const status = customerStatuses[Math.floor(Math.random() * customerStatuses.length)];
-    const assignedUser = Math.random() > 0.3 ? [agent1.id, agent2.id, agent3.id][Math.floor(Math.random() * 3)] : null;
-    const value = status === "CUSTOMER" ? Math.floor(Math.random() * 100000) + 10000 : (Math.random() > 0.7 ? Math.floor(Math.random() * 50000) + 5000 : null);
+    
+    // Weighted status distribution (more customers than leads)
+    const statusWeights = [0.15, 0.25, 0.50, 0.10]; // LEAD, PROSPECT, CUSTOMER, INACTIVE
+    const random = Math.random();
+    let status = "CUSTOMER";
+    if (random < statusWeights[0]) status = "LEAD";
+    else if (random < statusWeights[0] + statusWeights[1]) status = "PROSPECT";
+    else if (random < statusWeights[0] + statusWeights[1] + statusWeights[2]) status = "CUSTOMER";
+    else status = "INACTIVE";
+    
+    const assignedUser = Math.random() > 0.2 ? [agent1.id, agent2.id, agent3.id][Math.floor(Math.random() * 3)] : null;
+    
+    // Value based on status and position
+    let value = null;
+    if (status === "CUSTOMER" || status === "PROSPECT") {
+      const baseValue = position.includes("CEO") || position.includes("CFO") ? 100000 : 
+                       position.includes("Director") || position.includes("VP") ? 75000 :
+                       position.includes("Manager") ? 50000 : 25000;
+      value = Math.floor(Math.random() * baseValue * 2) + baseValue;
+    }
+    
+    // Assign to random company
+    const assignedCompanyId = companyIds[Math.floor(Math.random() * companyIds.length)];
+    const assignedCompany = allCompanies.find(c => c.id === assignedCompanyId);
+
+    const notes = [
+      `Interested in ${Math.random() > 0.5 ? 'enterprise' : 'standard'} solution.`,
+      `Budget ${Math.random() > 0.5 ? 'approved' : 'pending approval'}.`,
+      `Decision maker: ${Math.random() > 0.5 ? 'Yes' : 'No'}.`,
+      `Timeline: ${Math.random() > 0.5 ? 'Q1 2024' : 'Q2 2024'}.`,
+      `Priority: ${Math.random() > 0.5 ? 'High' : 'Medium'}.`,
+      `Previous customer: ${Math.random() > 0.3 ? 'Yes' : 'No'}.`,
+      `Competition: ${Math.random() > 0.5 ? 'None' : 'Multiple vendors'}.`,
+      `Technical requirements: ${Math.random() > 0.5 ? 'Standard' : 'Custom'}.`
+    ].filter(() => Math.random() > 0.5).join(" ");
 
     customers.push({
       name: `${firstName} ${lastName}`,
-      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${company.toLowerCase().replace(/[^a-z]/g, '')}.com`,
+      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${assignedCompany?.name.toLowerCase().replace(/[^a-z]/g, '') || 'company'}.com`,
       phone: `+49 ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 9000) + 1000}${Math.floor(Math.random() * 9000) + 1000}`,
-      company: company,
+      company: assignedCompany?.name || "Unknown Company",
       position: position,
       status: status,
       source: source,
       value: value,
-      notes: Math.random() > 0.5 ? `Interested in ${Math.random() > 0.5 ? 'enterprise' : 'standard'} solution. ${Math.random() > 0.5 ? 'Budget approved.' : 'Needs approval.'}` : null,
+      notes: notes || null,
       assignedTo: assignedUser,
       createdBy: [salesLead.id, agent1.id, agent2.id, agent3.id][Math.floor(Math.random() * 4)],
+      companyId: assignedCompanyId,
     });
   }
 
@@ -249,7 +279,7 @@ async function main() {
     data: customers,
   });
 
-  console.log(`✅ Created ${customers.length} customers`);
+  console.log(`✅ Created ${customers.length} customers assigned to companies`);
 
   // Create companies
   const industries = [
