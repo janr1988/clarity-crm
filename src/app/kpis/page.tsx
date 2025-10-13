@@ -228,19 +228,19 @@ export default async function KPIsPage() {
             current={kpis.revenue.current}
             target={kpis.revenue.target}
             previous={kpis.revenue.previous}
-            icon="📅"
+            icon="calendar"
           />
           <RevenueCard
             title="Quarterly Revenue"
             current={kpis.revenue.quarterly}
             target={kpis.revenue.quarterlyTarget}
-            icon="📊"
+            icon="chart"
           />
           <RevenueCard
             title="Yearly Revenue"
             current={kpis.revenue.yearly}
             target={kpis.revenue.yearlyTarget}
-            icon="🎯"
+            icon="trophy"
           />
         </div>
       </div>
