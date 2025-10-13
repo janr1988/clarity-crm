@@ -168,92 +168,127 @@ export default async function DealsPage() {
         </div>
       </div>
 
-      {/* Deals Table */}
+      {/* Enhanced Deals Table */}
       {deals.length === 0 ? (
-        <div className="text-gray-600">No deals found.</div>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+          <div className="text-gray-400 text-6xl mb-4">📊</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No deals found</h3>
+          <p className="text-gray-500">Get started by creating your first deal.</p>
+        </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Deal Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Value
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stage
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Probability
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Owner
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Expected Close
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {deals.map((deal) => (
-                <tr
-                  key={deal.id}
-                  className="hover:bg-gray-50"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Link href={`/deals/${deal.id}`} className="block">
-                      <div className="text-sm font-medium text-gray-900 hover:text-blue-600">{deal.name}</div>
-                      <div className="text-sm text-gray-500">{deal.customer.name}</div>
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{deal.company.name}</div>
-                    {deal.company.industry && (
-                      <div className="text-xs text-gray-500">{deal.company.industry}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {formatCurrency(deal.value)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${getStageColor(
-                        deal.stage
-                      )}`}
-                    >
-                      {deal.stage.replace("_", " ")}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="text-sm text-gray-900">{deal.probability}%</div>
-                      <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-500 h-2 rounded-full"
-                          style={{ width: `${deal.probability}%` }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {deal.owner.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {deal.expectedCloseDate
-                      ? new Date(deal.expectedCloseDate).toLocaleDateString("de-DE")
-                      : "-"}
-                  </td>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 className="text-xl font-semibold text-gray-900">All Deals</h2>
+            <p className="text-sm text-gray-600 mt-1">{deals.length} deals in pipeline</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Deal Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Company
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Value
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Stage
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Probability
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Owner
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Expected Close
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-50">
+                {deals.map((deal) => (
+                  <tr
+                    key={deal.id}
+                    className="group hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 border-l-4 border-transparent hover:border-blue-500"
+                  >
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <Link href={`/deals/${deal.id}`} className="block group-hover:translate-x-1 transition-transform">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <div>
+                            <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                              {deal.name}
+                            </div>
+                            <div className="text-sm text-gray-500">{deal.customer.name}</div>
+                          </div>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">
+                            {deal.company.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{deal.company.name}</div>
+                          {deal.company.industry && (
+                            <div className="text-xs text-gray-500">{deal.company.industry}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-gray-900">{formatCurrency(deal.value)}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${getStageColor(
+                          deal.stage
+                        )}`}
+                      >
+                        {deal.stage.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-sm font-medium text-gray-900">{deal.probability}%</div>
+                        <div className="w-20 bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${deal.probability}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">
+                            {deal.owner.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">{deal.owner.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">
+                        {deal.expectedCloseDate
+                          ? new Date(deal.expectedCloseDate).toLocaleDateString("de-DE")
+                          : "-"}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

@@ -7,6 +7,8 @@ import RevenueCard from "@/components/RevenueCard";
 import PipelineFunnel from "@/components/PipelineFunnel";
 import TopPerformers from "@/components/TopPerformers";
 import PipelineMetrics from "@/components/PipelineMetrics";
+import RevenueChart from "@/components/RevenueChart";
+import DealsByStageChart from "@/components/DealsByStageChart";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -113,6 +115,34 @@ async function getTeamKPIs() {
     };
   });
 
+  // Generate monthly revenue data for charts (last 12 months)
+  const monthlyRevenueData = [];
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date();
+    date.setMonth(date.getMonth() - i);
+    const month = date.toLocaleDateString('de-DE', { month: 'short' });
+    const year = date.getFullYear();
+    const monthNum = date.getMonth() + 1;
+    
+    const monthRevenue = wonDeals
+      .filter(d => 
+        d.actualCloseDate?.getFullYear() === year && 
+        d.actualCloseDate.getMonth() + 1 === monthNum
+      )
+      .reduce((sum, d) => sum + d.value, 0);
+    
+    const monthTarget = targets.find(
+      t => t.period === "MONTHLY" && t.month === monthNum && t.userId === null
+    )?.targetValue || 0;
+    
+    monthlyRevenueData.push({
+      month,
+      revenue: monthRevenue,
+      target: monthTarget,
+      previousYear: Math.floor(monthRevenue * 0.8), // Simulated previous year data
+    });
+  }
+
   // Top performers
   const topPerformers = users.map((user) => {
     const userWonDeals = wonDeals.filter((d) => d.ownerId === user.id);
@@ -155,6 +185,7 @@ async function getTeamKPIs() {
     },
     dealsByStage,
     topPerformers,
+    monthlyRevenueData,
     velocity: {
       avgDealCycle: 45, // Simplified for now
     },
@@ -257,11 +288,20 @@ export default async function KPIsPage() {
         />
       </div>
 
-      {/* Pipeline Funnel and Top Performers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <PipelineFunnel stages={kpis.dealsByStage} />
-        <TopPerformers performers={kpis.topPerformers} />
-      </div>
+          {/* Charts Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Analytics & Trends</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <RevenueChart data={kpis.monthlyRevenueData} />
+              <DealsByStageChart data={kpis.dealsByStage} />
+            </div>
+          </div>
+
+          {/* Pipeline Funnel and Top Performers */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <PipelineFunnel stages={kpis.dealsByStage} />
+            <TopPerformers performers={kpis.topPerformers} />
+          </div>
 
       {/* Additional Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

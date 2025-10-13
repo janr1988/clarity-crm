@@ -1,5 +1,14 @@
 "use client";
 
+import { 
+  MagnifyingGlassIcon,
+  UserCheckIcon,
+  DocumentTextIcon,
+  HandshakeIcon,
+  CheckCircleIcon,
+  XCircleIcon
+} from "@heroicons/react/24/outline";
+
 interface FunnelStage {
   stage: string;
   count: number;
@@ -23,78 +32,157 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
     }).format(value);
   };
 
-  const stageColors: Record<string, string> = {
-    PROSPECTING: "bg-blue-500",
-    QUALIFICATION: "bg-indigo-500",
-    PROPOSAL: "bg-purple-500",
-    NEGOTIATION: "bg-pink-500",
-    CLOSED_WON: "bg-green-500",
-    CLOSED_LOST: "bg-red-500",
+  const stageConfig: Record<string, { 
+    label: string; 
+    icon: any; 
+    bgGradient: string; 
+    textColor: string;
+    bgColor: string;
+  }> = {
+    PROSPECTING: {
+      label: "Prospecting",
+      icon: MagnifyingGlassIcon,
+      bgGradient: "bg-gradient-to-r from-blue-500 to-blue-600",
+      textColor: "text-blue-700",
+      bgColor: "bg-blue-50"
+    },
+    QUALIFICATION: {
+      label: "Qualification",
+      icon: UserCheckIcon,
+      bgGradient: "bg-gradient-to-r from-indigo-500 to-indigo-600",
+      textColor: "text-indigo-700",
+      bgColor: "bg-indigo-50"
+    },
+    PROPOSAL: {
+      label: "Proposal",
+      icon: DocumentTextIcon,
+      bgGradient: "bg-gradient-to-r from-purple-500 to-purple-600",
+      textColor: "text-purple-700",
+      bgColor: "bg-purple-50"
+    },
+    NEGOTIATION: {
+      label: "Negotiation",
+      icon: HandshakeIcon,
+      bgGradient: "bg-gradient-to-r from-pink-500 to-pink-600",
+      textColor: "text-pink-700",
+      bgColor: "bg-pink-50"
+    },
+    CLOSED_WON: {
+      label: "Closed Won",
+      icon: CheckCircleIcon,
+      bgGradient: "bg-gradient-to-r from-green-500 to-green-600",
+      textColor: "text-green-700",
+      bgColor: "bg-green-50"
+    },
+    CLOSED_LOST: {
+      label: "Closed Lost",
+      icon: XCircleIcon,
+      bgGradient: "bg-gradient-to-r from-red-500 to-red-600",
+      textColor: "text-red-700",
+      bgColor: "bg-red-50"
+    },
   };
 
-  const stageLabels: Record<string, string> = {
-    PROSPECTING: "Prospecting",
-    QUALIFICATION: "Qualification",
-    PROPOSAL: "Proposal",
-    NEGOTIATION: "Negotiation",
-    CLOSED_WON: "Closed Won",
-    CLOSED_LOST: "Closed Lost",
-  };
+  const totalValue = stages.reduce((sum, s) => sum + s.value, 0);
+  const totalDeals = stages.reduce((sum, s) => sum + s.count, 0);
+  const activeDeals = stages.filter(s => !['CLOSED_WON', 'CLOSED_LOST'].includes(s.stage));
+  const activeValue = activeDeals.reduce((sum, s) => sum + s.value, 0);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-card">
-      <h3 className="text-xl font-semibold text-gray-900 mb-6">
-        Sales Pipeline Funnel
-      </h3>
+    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-semibold text-gray-900">
+          Sales Pipeline Funnel
+        </h3>
+        <div className="text-sm text-gray-500">
+          {totalDeals} total deals
+        </div>
+      </div>
 
       <div className="space-y-4">
-        {stages.map((stage) => {
+        {stages.map((stage, index) => {
+          const config = stageConfig[stage.stage] || stageConfig.PROSPECTING;
+          const Icon = config.icon;
           const widthPercent = maxValue > 0 ? (stage.value / maxValue) * 100 : 0;
+          const conversionRate = index > 0 ? (stage.count / stages[index - 1].count) * 100 : 100;
 
           return (
-            <div key={stage.stage} className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  {stageLabels[stage.stage] || stage.stage}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {stage.count} deals • {stage.avgDaysInStage} days avg
-                </span>
+            <div key={stage.stage} className="relative group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 ${config.bgColor} rounded-lg`}>
+                    <Icon className={`h-5 w-5 ${config.textColor}`} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {config.label}
+                    </span>
+                    <div className="text-xs text-gray-500">
+                      {stage.avgDaysInStage} days avg
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-900">
+                    {stage.count} deals
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {conversionRate.toFixed(0)}% conversion
+                  </div>
+                </div>
               </div>
 
-              <div className="relative">
+              {/* Modern Progress Bar */}
+              <div className="relative bg-gray-200 rounded-full h-4 overflow-hidden">
                 <div
-                  className={`${
-                    stageColors[stage.stage] || "bg-gray-500"
-                  } rounded-r-lg h-12 flex items-center px-4 text-white font-semibold transition-all`}
-                  style={{ width: `${Math.max(widthPercent, 15)}%` }}
+                  className={`h-full ${config.bgGradient} rounded-full transition-all duration-500 ease-out relative`}
+                  style={{ width: `${Math.max(widthPercent, 8)}%` }}
                 >
-                  {formatCurrency(stage.value)}
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-pulse"></div>
                 </div>
+                
+                {/* Value overlay */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-gray-800 bg-white px-2 py-1 rounded-full shadow-sm">
+                    {formatCurrency(stage.value)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stage details */}
+              <div className="mt-2 flex justify-between text-xs text-gray-500">
+                <span>Value: {formatCurrency(stage.value)}</span>
+                <span>% of total: {totalValue > 0 ? ((stage.value / totalValue) * 100).toFixed(1) : 0}%</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Summary */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <div className="text-gray-500">Total Pipeline</div>
-            <div className="text-lg font-bold text-gray-900">
-              {formatCurrency(stages.reduce((sum, s) => sum + s.value, 0))}
+      {/* Enhanced Summary */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900">
+              {formatCurrency(totalValue)}
             </div>
+            <div className="text-sm text-gray-500">Total Pipeline</div>
           </div>
-          <div>
-            <div className="text-gray-500">Total Deals</div>
-            <div className="text-lg font-bold text-gray-900">
-              {stages.reduce((sum, s) => sum + s.count, 0)}
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {formatCurrency(activeValue)}
             </div>
+            <div className="text-sm text-gray-500">Active Pipeline</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {totalDeals > 0 ? ((stages.find(s => s.stage === 'CLOSED_WON')?.count || 0) / totalDeals * 100).toFixed(1) : 0}%
+            </div>
+            <div className="text-sm text-gray-500">Win Rate</div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
