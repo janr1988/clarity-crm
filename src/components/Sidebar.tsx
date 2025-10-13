@@ -78,9 +78,10 @@ export default function Sidebar() {
           </>
         ) : (
           <div className="px-4 py-3 text-center">
+            <div className="text-xs text-gray-500 mb-2">Nicht angemeldet</div>
             <Link
               href="/login"
-              className="text-sm text-primary hover:underline"
+              className="inline-block px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors"
             >
               Anmelden
             </Link>
