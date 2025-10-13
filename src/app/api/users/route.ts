@@ -3,9 +3,25 @@ import { prisma } from "@/lib/prisma";
 import { createUserSchema } from "@/lib/validation";
 import { ZodError } from "zod";
 import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { canViewUserList } from "@/lib/authorization";
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Only Sales Lead can view all users
+    if (!canViewUserList(session)) {
+      return NextResponse.json(
+        { error: "Forbidden: Only Sales Leads can view all users" },
+        { status: 403 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
     const isActive = searchParams.get("isActive");
@@ -43,6 +59,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Only Sales Lead can create users
+    if (!canViewUserList(session)) {
+      return NextResponse.json(
+        { error: "Forbidden: Only Sales Leads can create users" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = createUserSchema.parse(body);
 

@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatDate, getInitials, getStatusColor, getPriorityColor } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { canViewUserDetails } from "@/lib/authorization";
 
 async function getUser(id: string) {
   const user = await prisma.user.findUnique({
@@ -44,6 +47,18 @@ export default async function UserDetailPage({
 }: {
   params: { id: string };
 }) {
+  const session = await getServerSession(authOptions);
+
+  // Redirect to login if not authenticated
+  if (!session) {
+    redirect("/login");
+  }
+
+  // Check if user can view this user's details
+  if (!canViewUserDetails(session, params.id)) {
+    redirect(`/users/${session.user.id}`);
+  }
+
   const user = await getUser(params.id);
 
   const completedTasks = await prisma.task.count({

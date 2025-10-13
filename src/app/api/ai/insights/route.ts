@@ -1,8 +1,23 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { canViewAIInsights } from "@/lib/authorization";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Only Sales Lead can access AI insights
+    if (!canViewAIInsights(session)) {
+      return NextResponse.json(
+        { error: "Forbidden: Only Sales Leads can access AI insights" },
+        { status: 403 }
+      );
+    }
     // Gather team data
     const [users, tasks, activities, callNotes] = await Promise.all([
       prisma.user.findMany({

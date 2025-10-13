@@ -4,17 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { cn, getInitials } from "@/lib/utils";
-
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: "📊" },
-    { name: "AI Insights", href: "/insights", icon: "🤖" },
-    { name: "Companies", href: "/companies", icon: "🏢" },
-    { name: "Customers", href: "/customers", icon: "👤" },
-    { name: "Team", href: "/users", icon: "👥" },
-    { name: "Tasks", href: "/tasks", icon: "✓" },
-    { name: "Activities", href: "/activities", icon: "📋" },
-    { name: "Call Notes", href: "/call-notes", icon: "📞" },
-  ];
+import { isSalesLead } from "@/lib/authorization";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -23,6 +13,40 @@ export default function Sidebar() {
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
   };
+
+  // Define navigation items based on user role
+  const getNavigationItems = () => {
+    const commonItems = [
+      { name: "Dashboard", href: "/", icon: "📊" },
+      { name: "Companies", href: "/companies", icon: "🏢" },
+      { name: "Customers", href: "/customers", icon: "👤" },
+      { name: "Tasks", href: "/tasks", icon: "✓" },
+      { name: "Activities", href: "/activities", icon: "📋" },
+      { name: "Call Notes", href: "/call-notes", icon: "📞" },
+    ];
+
+    // Sales Lead gets additional menu items
+    if (isSalesLead(session)) {
+      return [
+        commonItems[0], // Dashboard
+        { name: "AI Insights", href: "/insights", icon: "🤖" },
+        { name: "Team", href: "/users", icon: "👥" },
+        ...commonItems.slice(1), // Rest of common items
+      ];
+    }
+
+    // Sales Agent gets "My Profile" instead of "Team"
+    return [
+      ...commonItems,
+      { 
+        name: "My Profile", 
+        href: session?.user?.id ? `/users/${session.user.id}` : "/users", 
+        icon: "👤" 
+      },
+    ];
+  };
+
+  const navigation = getNavigationItems();
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">

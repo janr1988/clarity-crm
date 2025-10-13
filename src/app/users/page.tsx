@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getInitials } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { canViewUserList } from "@/lib/authorization";
+import { redirect } from "next/navigation";
 
 async function getUsers() {
   return await prisma.user.findMany({
@@ -20,6 +24,18 @@ async function getUsers() {
 }
 
 export default async function UsersPage() {
+  const session = await getServerSession(authOptions);
+
+  // Redirect to login if not authenticated
+  if (!session) {
+    redirect("/login");
+  }
+
+  // Sales Agent can only view their own profile
+  if (!canViewUserList(session)) {
+    redirect(`/users/${session.user.id}`);
+  }
+
   const users = await getUsers();
 
   return (

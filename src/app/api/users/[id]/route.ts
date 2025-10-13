@@ -2,12 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { updateUserSchema } from "@/lib/validation";
 import { ZodError } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { canViewUserDetails } from "@/lib/authorization";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check if user can view this user's details
+    if (!canViewUserDetails(session, params.id)) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only view your own profile" },
+        { status: 403 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: params.id },
       include: {
@@ -56,6 +72,19 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check if user can update this user's details
+    if (!canViewUserDetails(session, params.id)) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only update your own profile" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = updateUserSchema.parse(body);
 
@@ -67,7 +96,10 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(user);
+    // Remove password from response
+    const { password, ...userWithoutPassword } = user;
+
+    return NextResponse.json(userWithoutPassword);
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(
@@ -88,6 +120,19 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Only Sales Lead can delete users
+    if (!canViewUserDetails(session, params.id)) {
+      return NextResponse.json(
+        { error: "Forbidden: Only Sales Leads can delete users" },
+        { status: 403 }
+      );
+    }
+
     await prisma.user.delete({
       where: { id: params.id },
     });
