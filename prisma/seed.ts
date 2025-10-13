@@ -215,6 +215,9 @@ async function main() {
   // Get all companies for assignment
   const allCompanies = await prisma.company.findMany();
   const companyIds = allCompanies.map(c => c.id);
+  
+  console.log(`Found ${allCompanies.length} companies for customer assignment`);
+  console.log(`Company IDs: ${companyIds.slice(0, 3).join(', ')}...`);
 
   const customers = [];
   
@@ -247,6 +250,10 @@ async function main() {
     // Assign to random company
     const assignedCompanyId = companyIds[Math.floor(Math.random() * companyIds.length)];
     const assignedCompany = allCompanies.find(c => c.id === assignedCompanyId);
+    
+    if (i < 3) { // Debug first 3 customers
+      console.log(`Customer ${i}: assignedCompanyId=${assignedCompanyId}, assignedCompany=${assignedCompany?.name}`);
+    }
 
     const notes = [
       `Interested in ${Math.random() > 0.5 ? 'enterprise' : 'standard'} solution.`,
