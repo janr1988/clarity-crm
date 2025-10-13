@@ -7,7 +7,7 @@ import { cn, getInitials } from "@/lib/utils";
 import { isSalesLead } from "@/lib/authorization";
 import {
   ChartBarIcon,
-  ChartLineIcon,
+  ChartBarSquareIcon,
   CpuChipIcon,
   UsersIcon,
   BriefcaseIcon,
@@ -43,7 +43,7 @@ export default function Sidebar() {
     if (isSalesLead(session)) {
       return [
         commonItems[0], // Dashboard
-        { name: "KPIs", href: "/kpis", icon: ChartLineIcon },
+        { name: "KPIs", href: "/kpis", icon: ChartBarSquareIcon },
         { name: "AI Insights", href: "/insights", icon: CpuChipIcon },
         { name: "Team", href: "/users", icon: UsersIcon },
         ...commonItems.slice(1), // Rest of common items

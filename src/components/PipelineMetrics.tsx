@@ -4,7 +4,7 @@ import {
   BriefcaseIcon,
   ChartBarIcon,
   CurrencyEuroIcon,
-  TargetIcon,
+  PresentationChartLineIcon,
 } from "@heroicons/react/24/outline";
 
 interface PipelineMetricsProps {
@@ -57,7 +57,7 @@ export default function PipelineMetrics({
       title: "Win Rate",
       value: `${conversionRate.toFixed(1)}%`,
       subtitle: "Conversion rate",
-      icon: TargetIcon,
+      icon: PresentationChartLineIcon,
       color: "green",
     },
   ];
