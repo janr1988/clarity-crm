@@ -21,6 +21,7 @@ export default function CompaniesPage() {
     async function fetchCompanies() {
       try {
         setIsLoading(true);
+        setError(null);
         const params = new URLSearchParams();
         if (industryFilter) params.append("industry", industryFilter);
         if (sizeFilter) params.append("size", sizeFilter);
@@ -28,6 +29,9 @@ export default function CompaniesPage() {
         
         const response = await fetch(`/api/companies?${params.toString()}`);
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Please log in to view companies");
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
@@ -38,8 +42,14 @@ export default function CompaniesPage() {
         setIsLoading(false);
       }
     }
-    if (session) {
+    
+    // Only fetch if session is available and not loading
+    if (session && session.user) {
       fetchCompanies();
+    } else if (session === null) {
+      // Session is confirmed to be null (not loading)
+      setError("Please log in to view companies");
+      setIsLoading(false);
     }
   }, [session, industryFilter, sizeFilter, statusFilter]);
 
@@ -62,7 +72,8 @@ export default function CompaniesPage() {
     return acc;
   }, {} as Record<string, number>);
 
-  if (isLoading) {
+  // Show loading state while session is being determined or data is loading
+  if (isLoading || (session === undefined)) {
     return (
       <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Companies</h2>
