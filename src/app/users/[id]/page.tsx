@@ -1,10 +1,12 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatDate, getInitials, getStatusColor, getPriorityColor } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canViewUserDetails } from "@/lib/authorization";
+import { canViewUserDetails, isSalesLead } from "@/lib/authorization";
+import UserCapacityWidget from "@/components/UserCapacityWidget";
 
 async function getUser(id: string) {
   const user = await prisma.user.findUnique({
@@ -109,24 +111,41 @@ export default async function UserDetailPage({
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Active Tasks</div>
-          <div className="text-3xl font-bold text-primary">{activeTasks}</div>
+      {/* Stats and Capacity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Stats Column */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded shadow-card">
+            <div className="text-sm text-gray-600 mb-1">Active Tasks</div>
+            <div className="text-3xl font-bold text-primary">{activeTasks}</div>
+          </div>
+          <div className="bg-white p-6 rounded shadow-card">
+            <div className="text-sm text-gray-600 mb-1">Completed Tasks</div>
+            <div className="text-3xl font-bold text-green-600">{completedTasks}</div>
+          </div>
+          <div className="bg-white p-6 rounded shadow-card">
+            <div className="text-sm text-gray-600 mb-1">Total Activities</div>
+            <div className="text-3xl font-bold text-gray-900">{user._count.activities}</div>
+          </div>
+          <div className="bg-white p-6 rounded shadow-card">
+            <div className="text-sm text-gray-600 mb-1">Call Notes</div>
+            <div className="text-3xl font-bold text-gray-900">{user._count.callNotes}</div>
+          </div>
         </div>
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Completed Tasks</div>
-          <div className="text-3xl font-bold text-green-600">{completedTasks}</div>
-        </div>
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Total Activities</div>
-          <div className="text-3xl font-bold text-gray-900">{user._count.activities}</div>
-        </div>
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Call Notes</div>
-          <div className="text-3xl font-bold text-gray-900">{user._count.callNotes}</div>
-        </div>
+
+        {/* Capacity Widget - Only for Sales Agents and only visible to Sales Leads */}
+        {user.role === "SALES_AGENT" && isSalesLead(session) && (
+          <div className="lg:col-span-1">
+            <Suspense fallback={
+              <div className="bg-white p-6 rounded-lg shadow animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+                <div className="h-24 bg-gray-200 rounded"></div>
+              </div>
+            }>
+              <UserCapacityWidget userId={user.id} />
+            </Suspense>
+          </div>
+        )}
       </div>
 
       {/* Active Tasks */}
