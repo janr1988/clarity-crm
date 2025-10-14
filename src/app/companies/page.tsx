@@ -115,7 +115,7 @@ export default function CompaniesPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="text-2xl font-bold text-blue-600">{companies.length}</div>
           <div className="text-sm text-gray-600">Total Companies</div>
@@ -270,7 +270,7 @@ export default function CompaniesPage() {
           {companies.length === 0 ? "No companies found." : "No companies match your search criteria."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
           {filteredCompanies.map((company) => (
             <CompanyCard key={company.id} company={company} />
           ))}

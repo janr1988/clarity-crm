@@ -128,7 +128,7 @@ export default async function DealsPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="text-sm font-medium text-gray-500">Total Deals</div>
           <div className="text-2xl font-bold text-gray-900">{deals.length}</div>
@@ -176,12 +176,14 @@ export default async function DealsPage() {
           <p className="text-gray-500">Get started by creating your first deal.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-            <h2 className="text-xl font-semibold text-gray-900">All Deals</h2>
-            <p className="text-sm text-gray-600 mt-1">{deals.length} deals in pipeline</p>
-          </div>
-          <div className="overflow-x-auto">
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden lg:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+              <h2 className="text-xl font-semibold text-gray-900">All Deals</h2>
+              <p className="text-sm text-gray-600 mt-1">{deals.length} deals in pipeline</p>
+            </div>
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
@@ -290,6 +292,79 @@ export default async function DealsPage() {
             </table>
           </div>
         </div>
+
+          {/* Mobile/Tablet Card View */}
+          <div className="lg:hidden space-y-4">
+            <div className="px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-gray-900">All Deals</h2>
+              <p className="text-sm text-gray-600">{deals.length} deals in pipeline</p>
+            </div>
+            {deals.map((deal) => (
+              <Link
+                key={deal.id}
+                href={`/deals/${deal.id}`}
+                className="block bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-1">{deal.name}</h3>
+                    <p className="text-sm text-gray-600">{deal.customer.name}</p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStageColor(
+                      deal.stage
+                    )}`}
+                  >
+                    {deal.stage.replace("_", " ")}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500">Company:</span>
+                    <div className="font-medium text-gray-900 mt-1">
+                      {deal.company.name}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Value:</span>
+                    <div className="font-semibold text-gray-900 mt-1">
+                      {formatCurrency(deal.value)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Probability:</span>
+                    <div className="flex items-center mt-1">
+                      <span className="font-medium text-gray-900 mr-2">
+                        {deal.probability}%
+                      </span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{ width: `${deal.probability}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Owner:</span>
+                    <div className="font-medium text-gray-900 mt-1">
+                      {deal.owner.name}
+                    </div>
+                  </div>
+                  {deal.expectedCloseDate && (
+                    <div className="col-span-2">
+                      <span className="text-gray-500">Expected Close:</span>
+                      <div className="font-medium text-gray-900 mt-1">
+                        {new Date(deal.expectedCloseDate).toLocaleDateString("de-DE")}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Summary */}

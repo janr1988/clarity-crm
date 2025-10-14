@@ -7,7 +7,7 @@ import { canViewUserList } from "@/lib/authorization";
 import { redirect } from "next/navigation";
 
 async function getUsers() {
-  return await prisma.user.findMany({
+  const users = await prisma.user.findMany({
     where: { isActive: true },
     include: {
       team: true,
@@ -21,6 +21,39 @@ async function getUsers() {
     },
     orderBy: { name: "asc" },
   });
+
+  // Für jeden User Deal-Statistiken hinzufügen
+  const usersWithDealStats = await Promise.all(
+    users.map(async (user: any) => {
+      const deals = await prisma.deal.findMany({
+        where: { ownerId: user.id },
+        select: {
+          stage: true,
+          value: true,
+        },
+      });
+
+      const wonDeals = deals.filter((d: any) => d.stage === 'CLOSED_WON');
+      const lostDeals = deals.filter((d: any) => d.stage === 'CLOSED_LOST');
+      const totalRevenue = wonDeals.reduce((sum: number, d: any) => sum + d.value, 0);
+      const totalDeals = deals.length;
+      const closedDeals = wonDeals.length + lostDeals.length;
+      const conversionRate = closedDeals > 0 ? (wonDeals.length / closedDeals) * 100 : 0;
+
+      return {
+        ...user,
+        dealStats: {
+          totalRevenue,
+          conversionRate,
+          totalDeals,
+          wonDeals: wonDeals.length,
+          lostDeals: lostDeals.length,
+        },
+      };
+    })
+  );
+
+  return usersWithDealStats;
 }
 
 export default async function UsersPage() {
@@ -53,8 +86,8 @@ export default async function UsersPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {users.map((user) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+        {users.map((user: any) => (
           <Link
             key={user.id}
             href={`/users/${user.id}`}
@@ -75,21 +108,70 @@ export default async function UsersPage() {
               </div>
             </div>
 
+            {/* Deal Statistics */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="mb-3">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Sales Performance</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-lg font-bold text-green-600">
+                      {new Intl.NumberFormat('de-DE', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(user.dealStats.totalRevenue)}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Revenue</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-blue-600">
+                      {user.dealStats.conversionRate.toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Win Rate</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Deal Counts */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {user.dealStats.totalDeals}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Total Deals</div>
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-green-600">
+                    {user.dealStats.wonDeals}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Won</div>
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-red-600">
+                    {user.dealStats.lostDeals}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Lost</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity Statistics */}
             <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-3 gap-4">
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-900">
                   {user._count.tasksAssigned}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Tasks</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-900">
                   {user._count.activities}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Activities</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-lg font-bold text-gray-900">
                   {user._count.callNotes}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Calls</div>

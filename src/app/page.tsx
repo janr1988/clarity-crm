@@ -89,7 +89,7 @@ export default async function Dashboard() {
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             📊 Team Performance
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <div className="bg-white p-6 rounded shadow-card">
               <div className="text-sm text-gray-600 mb-1">Active Team Members</div>
               <div className="text-3xl font-bold text-gray-900">{stats.totalUsers}</div>
@@ -118,7 +118,7 @@ export default async function Dashboard() {
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             📈 My Stats
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             <div className="bg-white p-6 rounded shadow-card">
               <div className="text-sm text-gray-600 mb-1">My Active Tasks</div>
               <div className="text-3xl font-bold text-primary">{stats.activeTasks}</div>
@@ -137,7 +137,7 @@ export default async function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Team Overview - Only for Sales Lead */}
         {isLead && (
           <div className="bg-white p-6 rounded shadow-card">

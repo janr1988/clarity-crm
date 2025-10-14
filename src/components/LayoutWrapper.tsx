@@ -19,9 +19,13 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   // For all other pages, wrap with auth guard and show sidebar
   return (
     <AuthGuard>
-      <div className="flex h-screen">
+      <div className="flex h-screen overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          {/* Mobile: Add padding for hamburger button */}
+          <div className="lg:hidden h-16 flex-shrink-0"></div>
+          {children}
+        </main>
       </div>
     </AuthGuard>
   );

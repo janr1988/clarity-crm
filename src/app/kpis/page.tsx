@@ -147,9 +147,12 @@ async function getTeamKPIs() {
   const topPerformers = users.map((user) => {
     const userWonDeals = wonDeals.filter((d) => d.ownerId === user.id);
     const userTotalDeals = deals.filter((d) => d.ownerId === user.id);
+    const userLostDeals = userTotalDeals.filter((d) => d.stage === "CLOSED_LOST");
     const userRevenue = userWonDeals.reduce((sum, d) => sum + d.value, 0);
-    const userConversionRate =
-      userTotalDeals.length > 0 ? (userWonDeals.length / userTotalDeals.length) * 100 : 0;
+    
+    // Conversion Rate basierend auf geschlossenen Deals (nicht allen Deals)
+    const userClosedDeals = userWonDeals.length + userLostDeals.length;
+    const userConversionRate = userClosedDeals > 0 ? (userWonDeals.length / userClosedDeals) * 100 : 0;
     const userAvgDealSize = userWonDeals.length > 0 ? userRevenue / userWonDeals.length : 0;
 
     return {
@@ -158,7 +161,8 @@ async function getTeamKPIs() {
       email: user.email,
       revenue: userRevenue,
       dealsWon: userWonDeals.length,
-      dealsLost: userTotalDeals.filter((d) => d.stage === "CLOSED_LOST").length,
+      dealsLost: userLostDeals.length,
+      totalDeals: userTotalDeals.length,
       conversionRate: parseFloat(userConversionRate.toFixed(2)),
       avgDealSize: parseFloat(userAvgDealSize.toFixed(2)),
     };
