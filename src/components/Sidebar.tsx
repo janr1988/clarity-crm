@@ -36,7 +36,7 @@ export default function Sidebar() {
   const getNavigationItems = () => {
     const commonItems = [
       { name: "Dashboard", href: "/", icon: ChartBarIcon },
-      { name: "Deals", href: "/deals", icon: BriefcaseIcon },
+      { name: "Opportunities", href: "/deals", icon: BriefcaseIcon },
       { name: "Companies", href: "/companies", icon: BuildingOfficeIcon },
       { name: "Customers", href: "/customers", icon: UserIcon },
       { name: "Tasks", href: "/tasks", icon: CheckIcon },

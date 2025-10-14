@@ -81,7 +81,7 @@ export default function DealsPageContent() {
     const created = searchParams.get('created');
     const name = searchParams.get('name');
     if (created === 'true') {
-      setJustCreated(name || 'Deal');
+      setJustCreated(name || 'Opportunity');
       const timer = setTimeout(() => setJustCreated(null), 4000);
       return () => clearTimeout(timer);
     }
@@ -161,7 +161,7 @@ export default function DealsPageContent() {
       )}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Deals & Opportunities</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Opportunities</h1>
           <p className="text-gray-600 mt-1">Manage sales pipeline and opportunities</p>
         </div>
         <div className="flex items-center gap-4">
@@ -170,7 +170,7 @@ export default function DealsPageContent() {
             href="/deals/new"
             className="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"
           >
-            New Deal
+            New Opportunity
           </Link>
         </div>
       </div>
@@ -190,11 +190,11 @@ export default function DealsPageContent() {
           </div>
         </div>
         <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Active Deals</div>
+          <div className="text-sm text-gray-600 mb-1">Active Opportunities</div>
           <div className="text-2xl md:text-3xl font-bold text-green-600">{data.stats.activeDeals}</div>
         </div>
         <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Won Deals</div>
+          <div className="text-sm text-gray-600 mb-1">Won Opportunities</div>
           <div className="text-2xl md:text-3xl font-bold text-green-600">{data.stats.wonDeals}</div>
         </div>
       </div>
@@ -207,7 +207,7 @@ export default function DealsPageContent() {
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
               <tr>
                 <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Deal
+                  Opportunity
                 </th>
                 <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Company
@@ -240,7 +240,7 @@ export default function DealsPageContent() {
                       href={`/deals/${deal.id}`}
                       className="font-medium text-gray-900 hover:text-primary transition-colors"
                     >
-                      {deal.name || 'Untitled Deal'}
+                      {deal.name || 'Untitled Opportunity'}
                     </Link>
                     {deal.customer && (
                       <p className="text-sm text-gray-600 mt-1">{deal.customer.name}</p>
@@ -310,7 +310,7 @@ export default function DealsPageContent() {
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
               <tr>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Deal
+                  Opportunity
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Company
@@ -343,7 +343,7 @@ export default function DealsPageContent() {
                       href={`/deals/${deal.id}`}
                       className="font-medium text-gray-900 hover:text-primary transition-colors text-sm"
                     >
-                      {deal.name && deal.name.length > 20 ? `${deal.name.substring(0, 20)}...` : deal.name || 'Untitled Deal'}
+                      {deal.name && deal.name.length > 20 ? `${deal.name.substring(0, 20)}...` : deal.name || 'Untitled Opportunity'}
                     </Link>
                     {deal.customer && (
                       <p className="text-xs text-gray-600 mt-1">{deal.customer.name}</p>
@@ -477,7 +477,7 @@ export default function DealsPageContent() {
 
         {data.deals.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No deals found</p>
+            <p className="text-gray-500">No opportunities found</p>
           </div>
         )}
       </div>

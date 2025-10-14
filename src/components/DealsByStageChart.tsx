@@ -51,8 +51,8 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
                 {entry.name}:
               </span>
               <div className="ml-2">
-                {entry.name === 'Deals' && (
-                  <div>{entry.value} deals</div>
+                {entry.name === 'Opportunities' && (
+                  <div>{entry.value} opportunities</div>
                 )}
                 {entry.name === 'Value' && (
                   <div>{new Intl.NumberFormat('de-DE', {
@@ -68,7 +68,7 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
                     currency: 'EUR',
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
-                  }).format(entry.value)} per deal</div>
+                  }).format(entry.value)} per opportunity</div>
                 )}
               </div>
             </div>
@@ -86,7 +86,7 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-900">{data.name}</p>
           <div className="text-sm text-gray-600">
-            <div>{data.count} deals</div>
+            <div>{data.count} opportunities</div>
             <div>{new Intl.NumberFormat('de-DE', {
               style: 'currency',
               currency: 'EUR',
@@ -103,14 +103,14 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
       <div className="mb-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Deals by Stage</h3>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Opportunities by Stage</h3>
         <p className="text-sm text-gray-600">Pipeline distribution and values</p>
       </div>
       
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         {/* Bar Chart */}
         <div className="h-64 md:h-80">
-          <h4 className="text-sm font-medium text-gray-700 mb-4">Deal Count by Stage</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-4">Opportunity Count by Stage</h4>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
@@ -136,7 +136,7 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
                 dataKey="count" 
                 fill="#3B82F6"
                 radius={[4, 4, 0, 0]}
-                name="Deals"
+                name="Opportunities"
               />
             </BarChart>
           </ResponsiveContainer>

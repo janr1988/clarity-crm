@@ -277,7 +277,7 @@ export default function CustomerDetailPage() {
                 {customer.value && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Deal Value
+                      Opportunity Value
                     </label>
                     <p className="text-green-600 font-semibold">
                       {formatValue(customer.value)}

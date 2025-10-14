@@ -95,7 +95,7 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
           Sales Pipeline Funnel
         </h3>
         <div className="text-sm text-gray-500">
-          {totalDeals} total deals
+          {totalDeals} total opportunities
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-gray-900">
-                    {stage.count} deals
+                    {stage.count} opportunities
                   </div>
                   <div className="text-xs text-gray-500">
                     {showConversionRate ? (

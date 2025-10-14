@@ -211,7 +211,7 @@ export default function KPIsPageContent() {
           <div className="text-3xl font-bold text-gray-900">
             {kpis.velocity.avgDealCycle} days
           </div>
-          <div className="text-xs text-gray-500 mt-2">Average deal cycle</div>
+          <div className="text-xs text-gray-500 mt-2">Average opportunity cycle</div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-card">
@@ -220,12 +220,12 @@ export default function KPIsPageContent() {
             {formatCurrency(kpis.forecast.next90Days)}
           </div>
           <div className="text-xs text-gray-500 mt-2">
-            {kpis.forecast.dealCount} deals closing soon
+            {kpis.forecast.dealCount} opportunities closing soon
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-card">
-          <div className="text-sm font-medium text-gray-600 mb-2">Deal Summary</div>
+          <div className="text-sm font-medium text-gray-600 mb-2">Opportunity Summary</div>
           <div className="space-y-1 mt-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Won:</span>
@@ -251,7 +251,7 @@ export default function KPIsPageContent() {
             href="/deals"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            View All Deals
+            View All Opportunities
           </Link>
           <Link
             href="/users"

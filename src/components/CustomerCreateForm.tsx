@@ -246,7 +246,7 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
 
         <div>
           <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-1">
-            Deal Value (€)
+            Opportunity Value (€)
           </label>
           <input
             id="value"

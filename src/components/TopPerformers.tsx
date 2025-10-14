@@ -95,7 +95,7 @@ export default function TopPerformers({ performers }: TopPerformersProps) {
                 <div className="text-lg font-bold text-gray-900">
                   {performer.totalDeals || performer.dealsWon}
                 </div>
-                <div className="text-xs text-gray-500">Total Deals</div>
+                <div className="text-xs text-gray-500">Total Opportunities</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-green-600">
@@ -107,7 +107,7 @@ export default function TopPerformers({ performers }: TopPerformersProps) {
                 <div className="text-lg font-bold text-gray-600">
                   {formatCurrency(performer.avgDealSize)}
                 </div>
-                <div className="text-xs text-gray-500">Avg Deal</div>
+                <div className="text-xs text-gray-500">Avg Opportunity</div>
               </div>
             </div>
           </Link>

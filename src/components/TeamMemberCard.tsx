@@ -168,13 +168,13 @@ export default function TeamMemberCard({ user, capacityInfo }: TeamMemberCardPro
             </p>
           </div>
           <div className="bg-gray-50 p-3 rounded-lg">
-            <p className="text-xs text-gray-600">Total Deals</p>
+            <p className="text-xs text-gray-600">Total Opportunities</p>
             <p className="text-sm font-semibold text-gray-900">
               {user.dealStats.totalDeals}
             </p>
           </div>
           <div className="bg-gray-50 p-3 rounded-lg">
-            <p className="text-xs text-gray-600">Won Deals</p>
+            <p className="text-xs text-gray-600">Won</p>
             <p className="text-sm font-semibold text-green-600">
               {user.dealStats.wonDeals}
             </p>

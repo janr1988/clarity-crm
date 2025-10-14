@@ -87,16 +87,16 @@ export default function Page() {
             )
           : undefined;
         setError(
-          data?.error || "Failed to create deal. Please check your inputs."
+          data?.error || "Failed to create opportunity. Please check your inputs."
         );
         if (details && details.length) setErrorDetails(details);
         return;
       }
 
       const deal = await res.json();
-      router.push(`/deals?created=true&name=${encodeURIComponent(deal.name || 'Deal')}&filter=all`);
+      router.push(`/deals?created=true&name=${encodeURIComponent(deal.name || 'Opportunity')}&filter=all`);
     } catch (err: any) {
-      setError(err?.message || "Unexpected error while creating deal.");
+      setError(err?.message || "Unexpected error while creating opportunity.");
     } finally {
       setIsLoading(false);
     }
@@ -106,10 +106,10 @@ export default function Page() {
     <div className="p-6">
       <div className="mb-8">
         <Link href="/deals" className="text-primary hover:underline">
-          ← Back to Deals
+          ← Back to Opportunities
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900 mt-2">Create New Deal</h1>
-        <p className="text-gray-600 mt-1">Add a new deal opportunity</p>
+        <h1 className="text-3xl font-bold text-gray-900 mt-2">Create New Opportunity</h1>
+        <p className="text-gray-600 mt-1">Add a new sales opportunity</p>
       </div>
 
       <div className="bg-white p-6 rounded border border-gray-200 max-w-3xl">
@@ -130,7 +130,7 @@ export default function Page() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Deal Name *
+                Opportunity Name *
               </label>
               <input
                 id="name"
@@ -144,7 +144,7 @@ export default function Page() {
 
             <div>
               <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-1">
-                Deal Value (€) *
+                Opportunity Value (€) *
               </label>
               <input
                 id="value"
@@ -245,7 +245,7 @@ export default function Page() {
               disabled={isLoading}
               className="px-6 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Creating..." : "Create Deal"}
+              {isLoading ? "Creating..." : "Create Opportunity"}
             </button>
           </div>
         </form>
