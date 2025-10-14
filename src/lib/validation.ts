@@ -54,6 +54,7 @@ export const updateActivitySchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
   duration: z.number().int().positive().optional().nullable(),
+  userId: z.string().uuid().optional(),
 });
 
 // CallNote schemas

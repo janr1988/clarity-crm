@@ -24,6 +24,11 @@ interface Activity {
   _source?: "activity" | "callNote" | "task";
 }
 
+interface User {
+  id: string;
+  name: string;
+}
+
 async function getActivities(timeFilter: TimeFilterType, memberFilter: string, currentUserId: string): Promise<Activity[]> {
   const { start, end } = getDateRange(timeFilter);
   
@@ -48,6 +53,14 @@ async function getActivities(timeFilter: TimeFilterType, memberFilter: string, c
   return response.json();
 }
 
+async function getUsers(): Promise<User[]> {
+  const response = await fetch('/api/users');
+  if (!response.ok) {
+    throw new Error('Failed to fetch users');
+  }
+  return response.json();
+}
+
 export default function ActivitiesPageContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -55,16 +68,22 @@ export default function ActivitiesPageContent() {
   const memberFilter = searchParams.get('member') || (isSalesLead(session) ? 'all' : 'me');
   
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingActivityId, setUpdatingActivityId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchActivities() {
+    async function fetchData() {
       try {
         setLoading(true);
         const currentUserId = session?.user?.id || '';
-        const activitiesData = await getActivities(timeFilter, memberFilter, currentUserId);
+        const [activitiesData, usersData] = await Promise.all([
+          getActivities(timeFilter, memberFilter, currentUserId),
+          isSalesLead(session) ? getUsers() : Promise.resolve([])
+        ]);
         setActivities(activitiesData);
+        setUsers(usersData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -73,9 +92,45 @@ export default function ActivitiesPageContent() {
     }
 
     if (session?.user?.id) {
-      fetchActivities();
+      fetchData();
     }
-  }, [timeFilter, memberFilter, session?.user?.id]);
+  }, [timeFilter, memberFilter, session?.user?.id, session]);
+
+  // Handle user change for Sales Leads
+  const handleUserChange = async (activityId: string, newUserId: string) => {
+    try {
+      setUpdatingActivityId(activityId);
+      const response = await fetch(`/api/activities/${activityId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: newUserId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update activity');
+      }
+
+      // Update the activities list optimistically
+      setActivities(prev => prev.map(activity => 
+        activity.id === activityId 
+          ? { 
+              ...activity, 
+              user: { 
+                id: newUserId, 
+                name: users.find(u => u.id === newUserId)?.name || 'Unknown' 
+              } 
+            }
+          : activity
+      ));
+    } catch (error) {
+      console.error('Error updating activity user:', error);
+      // You could add a toast notification here
+    } finally {
+      setUpdatingActivityId(null);
+    }
+  };
 
   const activityStats = {
     calls: activities.filter((a) => a.type === "CALL").length,
@@ -165,12 +220,27 @@ export default function ActivitiesPageContent() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-medium text-gray-900">{activity.title}</h3>
-                      <Link
-                        href={`/users/${activity.user.id}`}
-                        className="text-sm text-gray-600 hover:text-primary mt-1 inline-block"
-                      >
-                        {activity.user.name}
-                      </Link>
+                      {isSalesLead(session) ? (
+                        <select
+                          value={activity.user.id}
+                          onChange={(e) => handleUserChange(activity.id, e.target.value)}
+                          disabled={updatingActivityId === activity.id}
+                          className="text-sm text-gray-600 bg-transparent border-none p-0 mt-1 focus:outline-none focus:ring-0 cursor-pointer hover:text-primary"
+                        >
+                          {users.map((user) => (
+                            <option key={user.id} value={user.id}>
+                              {user.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <Link
+                          href={`/users/${activity.user.id}`}
+                          className="text-sm text-gray-600 hover:text-primary mt-1 inline-block"
+                        >
+                          {activity.user.name}
+                        </Link>
+                      )}
                     </div>
                     <div className="text-sm text-gray-500">
                       {formatDateTime(activity.createdAt)}
