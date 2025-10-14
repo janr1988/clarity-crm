@@ -12,7 +12,12 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:backup": "bash scripts/backup-db.sh",
     "db:restore:latest": "bash scripts/restore-latest.sh",
-    "db:dump": "sqlite3 prisma/dev.db \".dump\" > backups/dev.sql"
+    "db:dump": "sqlite3 prisma/dev.db \".dump\" > backups/dev.sql",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:prepare": "dotenv -e .env.test -- npx prisma db push",
+    "test:reset": "dotenv -e .env.test -- tsx test/utils/reset.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
