@@ -1,151 +1,24 @@
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { formatDate, getStatusColor, getPriorityColor } from "@/lib/utils";
+import { Suspense } from "react";
+import TasksPageContent from "./TasksPageContent";
 
-async function getTasks() {
-  return await prisma.task.findMany({
-    include: {
-      assignee: true,
-      createdBy: true,
-      team: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-export default async function TasksPage() {
-  const tasks = await getTasks();
-
-  const tasksByStatus = {
-    TODO: tasks.filter((t) => t.status === "TODO"),
-    IN_PROGRESS: tasks.filter((t) => t.status === "IN_PROGRESS"),
-    COMPLETED: tasks.filter((t) => t.status === "COMPLETED"),
-    CANCELLED: tasks.filter((t) => t.status === "CANCELLED"),
-  };
-
+export default function TasksPage() {
   return (
-    <div className="p-6">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
-          <p className="text-gray-600 mt-1">Manage team tasks and assignments</p>
-        </div>
-        <Link
-          href="/tasks/new"
-          className="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"
-        >
-          New Task
-        </Link>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">To Do</div>
-          <div className="text-3xl font-bold text-gray-900">
-            {tasksByStatus.TODO.length}
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">In Progress</div>
-          <div className="text-3xl font-bold text-blue-600">
-            {tasksByStatus.IN_PROGRESS.length}
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Completed</div>
-          <div className="text-3xl font-bold text-green-600">
-            {tasksByStatus.COMPLETED.length}
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">Cancelled</div>
-          <div className="text-3xl font-bold text-red-600">
-            {tasksByStatus.CANCELLED.length}
+    <Suspense fallback={
+      <div className="p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-gray-200 rounded h-24"></div>
+            ))}
           </div>
         </div>
       </div>
-
-      {/* Task List */}
-      <div className="bg-white rounded shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Task
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assignee
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Priority
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Due Date
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {tasks.map((task) => (
-                <tr
-                  key={task.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <Link
-                      href={`/tasks/${task.id}`}
-                      className="font-medium text-gray-900 hover:text-primary"
-                    >
-                      {task.title}
-                    </Link>
-                    {task.description && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-1">
-                        {task.description}
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {task.assignee ? (
-                      <Link
-                        href={`/users/${task.assignee.id}`}
-                        className="text-gray-900 hover:text-primary"
-                      >
-                        {task.assignee.name}
-                      </Link>
-                    ) : (
-                      <span className="text-gray-400">Unassigned</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.status)}`}>
-                      {task.status.replace("_", " ")}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {task.dueDate ? formatDate(task.dueDate) : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {tasks.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No tasks found</p>
-          </div>
-        )}
-      </div>
-    </div>
+    }>
+      <TasksPageContent />
+    </Suspense>
   );
 }
+
 

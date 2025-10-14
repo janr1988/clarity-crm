@@ -8,12 +8,24 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
     const type = searchParams.get("type");
+    const start = searchParams.get("start");
+    const end = searchParams.get("end");
+
+    const whereClause: any = {
+      ...(userId && { userId }),
+      ...(type && { type: type as any }),
+    };
+
+    // Add date filtering if start and end are provided
+    if (start && end) {
+      whereClause.createdAt = {
+        gte: new Date(start),
+        lte: new Date(end),
+      };
+    }
 
     const activities = await prisma.activity.findMany({
-      where: {
-        ...(userId && { userId }),
-        ...(type && { type: type as any }),
-      },
+      where: whereClause,
       include: {
         user: true,
       },

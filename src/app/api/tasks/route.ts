@@ -9,13 +9,25 @@ export async function GET(request: NextRequest) {
     const assigneeId = searchParams.get("assigneeId");
     const status = searchParams.get("status");
     const teamId = searchParams.get("teamId");
+    const start = searchParams.get("start");
+    const end = searchParams.get("end");
+
+    const whereClause: any = {
+      ...(assigneeId && { assigneeId }),
+      ...(status && { status: status as any }),
+      ...(teamId && { teamId }),
+    };
+
+    // Add date filtering if start and end are provided
+    if (start && end) {
+      whereClause.createdAt = {
+        gte: new Date(start),
+        lte: new Date(end),
+      };
+    }
 
     const tasks = await prisma.task.findMany({
-      where: {
-        ...(assigneeId && { assigneeId }),
-        ...(status && { status: status as any }),
-        ...(teamId && { teamId }),
-      },
+      where: whereClause,
       include: {
         assignee: true,
         createdBy: true,
