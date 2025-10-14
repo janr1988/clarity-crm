@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatDate, getStatusColor, getPriorityColor } from "@/lib/utils";
 import { TimeFilter as TimeFilterType, getDateRange, getDefaultTimeFilter } from "@/lib/dateUtils";
-import TimeFilterComponent from "@/components/TimeFilter";
+import TimeFilterWithUpcoming from "@/components/TimeFilterWithUpcoming";
 
 interface Task {
   id: string;
@@ -105,7 +105,7 @@ export default function TasksPageContent() {
           <p className="text-gray-600 mt-1">Manage team tasks and assignments</p>
         </div>
         <div className="flex items-center gap-4">
-          <TimeFilterComponent page="tasks" />
+          <TimeFilterWithUpcoming page="tasks" />
           <Link
             href="/tasks/new"
             className="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"

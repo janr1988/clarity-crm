@@ -211,7 +211,7 @@ export function getDefaultTimeFilter(page: string): TimeFilter {
     case 'dashboard':
       return 'upcoming7d';
     case 'tasks':
-      return '30d';
+      return 'upcoming7d';
     case 'activities':
       return '7d';
     case 'call-notes':
