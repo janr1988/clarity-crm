@@ -159,55 +159,55 @@ export default function DealsPageContent() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         <div className="bg-white p-6 rounded shadow-card">
           <div className="text-sm text-gray-600 mb-1">Total Pipeline Value</div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-2xl md:text-3xl font-bold text-gray-900">
             {formatCurrency(data.stats.totalValue)}
           </div>
         </div>
         <div className="bg-white p-6 rounded shadow-card">
           <div className="text-sm text-gray-600 mb-1">Weighted Pipeline</div>
-          <div className="text-3xl font-bold text-blue-600">
+          <div className="text-2xl md:text-3xl font-bold text-blue-600">
             {formatCurrency(data.stats.weightedValue)}
           </div>
         </div>
         <div className="bg-white p-6 rounded shadow-card">
           <div className="text-sm text-gray-600 mb-1">Active Deals</div>
-          <div className="text-3xl font-bold text-green-600">{data.stats.activeDeals}</div>
+          <div className="text-2xl md:text-3xl font-bold text-green-600">{data.stats.activeDeals}</div>
         </div>
         <div className="bg-white p-6 rounded shadow-card">
           <div className="text-sm text-gray-600 mb-1">Won Deals</div>
-          <div className="text-3xl font-bold text-green-600">{data.stats.wonDeals}</div>
+          <div className="text-2xl md:text-3xl font-bold text-green-600">{data.stats.wonDeals}</div>
         </div>
       </div>
 
       {/* Deals List */}
       <div className="bg-white rounded shadow-card overflow-hidden">
         {/* Desktop Table */}
-        <div className="hidden lg:block overflow-x-auto">
+        <div className="hidden xl:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Deal
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Company
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Owner
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Stage
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Value
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Probability
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 xl:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Close Date
                 </th>
               </tr>
@@ -218,7 +218,7 @@ export default function DealsPageContent() {
                   key={deal.id}
                   className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
                 >
-                  <td className="px-6 py-4">
+                  <td className="px-4 xl:px-6 py-4">
                     <Link
                       href={`/deals/${deal.id}`}
                       className="font-medium text-gray-900 hover:text-primary transition-colors"
@@ -229,7 +229,7 @@ export default function DealsPageContent() {
                       <p className="text-sm text-gray-600 mt-1">{deal.customer.name}</p>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 xl:px-6 py-4 whitespace-nowrap">
                     {deal.company ? (
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 mr-3">
@@ -246,7 +246,7 @@ export default function DealsPageContent() {
                       <span className="text-gray-400">No company</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 xl:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-medium mr-3">
                         {getInitials(deal.owner.name)}
@@ -259,15 +259,15 @@ export default function DealsPageContent() {
                       </Link>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 xl:px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(deal.stage)}`}>
                       {deal.stage.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {formatCurrency(deal.value)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 xl:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                         <div
@@ -278,7 +278,7 @@ export default function DealsPageContent() {
                       <span className="text-sm text-gray-600">{deal.probability}%</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "-"}
                   </td>
                 </tr>
@@ -287,7 +287,110 @@ export default function DealsPageContent() {
           </table>
         </div>
 
-        {/* Mobile/Tablet Cards */}
+        {/* Tablet View - Compact Table */}
+        <div className="hidden lg:block xl:hidden overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <tr>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Deal
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Company
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Owner
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Stage
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Value
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  %
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Close
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {data.deals.map((deal) => (
+                <tr
+                  key={deal.id}
+                  className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                >
+                  <td className="px-3 py-3">
+                    <Link
+                      href={`/deals/${deal.id}`}
+                      className="font-medium text-gray-900 hover:text-primary transition-colors text-sm"
+                    >
+                      {deal.title.length > 20 ? `${deal.title.substring(0, 20)}...` : deal.title}
+                    </Link>
+                    {deal.customer && (
+                      <p className="text-xs text-gray-600 mt-1">{deal.customer.name}</p>
+                    )}
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    {deal.company ? (
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 mr-2">
+                          {getInitials(deal.company.name)}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {deal.company.name.length > 15 ? `${deal.company.name.substring(0, 15)}...` : deal.company.name}
+                          </div>
+                          <div className="text-xs text-gray-500">{deal.company.industry}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-sm">No company</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-medium mr-2">
+                        {getInitials(deal.owner.name)}
+                      </div>
+                      <Link
+                        href={`/users/${deal.owner.id}`}
+                        className="text-sm font-medium text-gray-900 hover:text-primary transition-colors"
+                      >
+                        {deal.owner.name.split(' ')[0]}
+                      </Link>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(deal.stage)}`}>
+                      {deal.stage.replace("_", " ").substring(0, 4)}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {formatCurrency(deal.value)}
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-12 bg-gray-200 rounded-full h-1.5 mr-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all duration-300"
+                          style={{ width: `${deal.probability}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-gray-600">{deal.probability}%</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap text-xs text-gray-600">
+                    {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards */}
         <div className="lg:hidden divide-y divide-gray-200">
           {data.deals.map((deal) => (
             <div key={deal.id} className="p-6 hover:bg-gray-50 transition-colors">
