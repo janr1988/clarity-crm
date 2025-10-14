@@ -6,6 +6,9 @@ import Link from "next/link";
 import { formatDate, getStatusColor, getPriorityColor } from "@/lib/utils";
 import { TimeFilter as TimeFilterType, getDateRange, getDefaultTimeFilter } from "@/lib/dateUtils";
 import TimeFilterWithUpcoming from "@/components/TimeFilterWithUpcoming";
+import TeamMemberFilter from "@/components/TeamMemberFilter";
+import { useSession } from "next-auth/react";
+import { isSalesLead } from "@/lib/authorization";
 
 interface Task {
   id: string;
@@ -29,10 +32,30 @@ interface Task {
   } | null;
 }
 
-async function getTasks(timeFilter: TimeFilterType): Promise<Task[]> {
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+async function getTasks(timeFilter: TimeFilterType, assigneeFilter: string, currentUserId: string): Promise<Task[]> {
   const { start, end } = getDateRange(timeFilter);
   
-  const response = await fetch(`/api/tasks?start=${start.toISOString()}&end=${end.toISOString()}`);
+  // Build query parameters
+  const params = new URLSearchParams({
+    start: start.toISOString(),
+    end: end.toISOString(),
+  });
+
+  // Add assignee filter
+  if (assigneeFilter === 'me') {
+    params.set('assigneeId', currentUserId);
+  } else if (assigneeFilter !== 'all') {
+    params.set('assigneeId', assigneeFilter);
+  }
+  
+  const response = await fetch(`/api/tasks?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Failed to fetch tasks');
   }
@@ -40,18 +63,40 @@ async function getTasks(timeFilter: TimeFilterType): Promise<Task[]> {
 }
 
 export default function TasksPageContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const timeFilter = (searchParams.get('filter') as TimeFilterType) || getDefaultTimeFilter('tasks');
+  const assigneeFilter = searchParams.get('member') || (isSalesLead(session) ? 'all' : 'me');
   
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+
+  // Fetch users for assignee dropdown
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const usersData = await response.json();
+          setUsers(usersData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      }
+    }
+
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     async function fetchTasks() {
       try {
         setLoading(true);
-        const tasksData = await getTasks(timeFilter);
+        const currentUserId = session?.user?.id || '';
+        const tasksData = await getTasks(timeFilter, assigneeFilter, currentUserId);
         setTasks(tasksData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -60,8 +105,10 @@ export default function TasksPageContent() {
       }
     }
 
-    fetchTasks();
-  }, [timeFilter]);
+    if (session?.user?.id) {
+      fetchTasks();
+    }
+  }, [timeFilter, assigneeFilter, session?.user?.id]);
 
   const tasksByStatus = {
     TODO: tasks.filter((t) => t.status === "TODO"),
@@ -69,6 +116,42 @@ export default function TasksPageContent() {
     COMPLETED: tasks.filter((t) => t.status === "COMPLETED"),
     CANCELLED: tasks.filter((t) => t.status === "CANCELLED"),
   };
+
+  // Handle assignee change for Sales Leads
+  const handleAssigneeChange = async (taskId: string, newAssigneeId: string) => {
+    try {
+      setUpdatingTaskId(taskId);
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assigneeId: newAssigneeId || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update task assignee');
+      }
+
+      const updatedTask = await response.json();
+      
+      // Update the task in the local state
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId ? updatedTask : task
+        )
+      );
+    } catch (error) {
+      console.error('Error updating task assignee:', error);
+      alert('Failed to update task assignee');
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
+  const isLead = isSalesLead(session);
 
   if (loading) {
     return (
@@ -106,6 +189,7 @@ export default function TasksPageContent() {
         </div>
         <div className="flex items-center gap-4">
           <TimeFilterWithUpcoming page="tasks" />
+          <TeamMemberFilter page="tasks" />
           <Link
             href="/tasks/new"
             className="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"
@@ -186,15 +270,31 @@ export default function TasksPageContent() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {task.assignee ? (
-                      <Link
-                        href={`/users/${task.assignee.id}`}
-                        className="text-gray-900 hover:text-primary"
+                    {isLead ? (
+                      <select
+                        value={task.assignee?.id || ''}
+                        onChange={(e) => handleAssigneeChange(task.id, e.target.value)}
+                        disabled={updatingTaskId === task.id}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
                       >
-                        {task.assignee.name}
-                      </Link>
+                        <option value="">Unassigned</option>
+                        {users.map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.name}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
-                      <span className="text-gray-400">Unassigned</span>
+                      task.assignee ? (
+                        <Link
+                          href={`/users/${task.assignee.id}`}
+                          className="text-gray-900 hover:text-primary"
+                        >
+                          {task.assignee.name}
+                        </Link>
+                      ) : (
+                        <span className="text-gray-400">Unassigned</span>
+                      )
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
