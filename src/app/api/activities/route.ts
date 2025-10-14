@@ -54,12 +54,26 @@ export async function GET(request: NextRequest) {
       prisma.task.findMany({
         where: {
           ...(userId && { assigneeId: userId }),
-          ...(start && end && {
-            createdAt: {
-              gte: new Date(start),
-              lte: new Date(end),
-            },
-          }),
+          ...(start && end && (() => {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            // Allow for a 5-minute buffer to account for API call timing
+            const now = new Date();
+            const bufferTime = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+            const isUpcomingView = startDate >= bufferTime;
+            
+            return isUpcomingView ? {
+              dueDate: {
+                gte: startDate,
+                lte: endDate,
+              }
+            } : {
+              createdAt: {
+                gte: startDate,
+                lte: endDate,
+              }
+            };
+          })()),
         },
         include: {
           assignee: true,

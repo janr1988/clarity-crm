@@ -42,8 +42,13 @@ export function getWeekStart(date: Date = new Date()): Date {
 export function getWeekEnd(date: Date = new Date()): Date {
   const weekEnd = new Date(date);
   const day = weekEnd.getDay();
-  const diff = weekEnd.getDate() - day + (day === 0 ? 0 : 7); // Adjust when day is Sunday
-  weekEnd.setDate(diff);
+  
+  // Calculate days to add to reach Sunday (end of week)
+  // Sunday = 0, Monday = 1, ..., Saturday = 6
+  // To get to Sunday: add (7 - day) days
+  // If it's already Sunday (day === 0), we want the same day (end of current week)
+  const daysToAdd = day === 0 ? 0 : 7 - day;
+  weekEnd.setDate(weekEnd.getDate() + daysToAdd);
   weekEnd.setHours(23, 59, 59, 999);
   return weekEnd;
 }
@@ -68,32 +73,29 @@ export async function getUserCapacityInfo(
     return null;
   }
 
-  // Get current week's planned items (tasks + activities)
-  const [plannedTasks, plannedActivities] = await Promise.all([
-    prisma.task.count({
-      where: {
-        assigneeId: userId,
-        plannedWeek: {
-          gte: startOfWeek,
-          lte: endOfWeek,
-        },
-        isPlanned: true,
+  // Get current week's tasks based on due date
+  console.log(`=== getUserCapacityInfo DEBUG for ${userId} ===`);
+  console.log(`startOfWeek: ${startOfWeek.toISOString()}`);
+  console.log(`endOfWeek: ${endOfWeek.toISOString()}`);
+  console.log(`Looking for tasks between ${startOfWeek.toISOString()} and ${endOfWeek.toISOString()}`);
+  
+  const currentWeekTasks = await prisma.task.count({
+    where: {
+      assigneeId: userId,
+      dueDate: {
+        gte: startOfWeek,
+        lte: endOfWeek,
       },
-    }),
-    prisma.activity.count({
-      where: {
-        userId: userId,
-        plannedWeek: {
-          gte: startOfWeek,
-          lte: endOfWeek,
-        },
-        isPlanned: true,
-        type: "CALL", // Only count calls as capacity items
+      status: {
+        in: ["TODO", "IN_PROGRESS"], // Only count active tasks
       },
-    }),
-  ]);
+    },
+  });
+  
+  console.log(`Found ${currentWeekTasks} tasks for user ${userId}`);
+  console.log(`=== END getUserCapacityInfo DEBUG ===`);
 
-  const currentWeekItems = plannedTasks + plannedActivities;
+  const currentWeekItems = currentWeekTasks;
   const availableSlots = Math.max(0, user.capacity.maxItemsPerWeek - currentWeekItems);
   const capacityPercentage = (currentWeekItems / user.capacity.maxItemsPerWeek) * 100;
 

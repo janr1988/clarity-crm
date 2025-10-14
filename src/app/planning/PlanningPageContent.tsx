@@ -19,7 +19,19 @@ interface TeamMember {
 }
 
 export default function PlanningPageContent({ teamId }: PlanningPageContentProps) {
-  const [selectedWeek, setSelectedWeek] = useState(getWeekStart().toISOString().split('T')[0]);
+  const [selectedWeek, setSelectedWeek] = useState(() => {
+    // Use the centralized getWeekStart function for consistency
+    const weekStart = getWeekStart();
+    const weekString = weekStart.toISOString().split('T')[0];
+    
+    console.log('=== PLANNING PAGE FRONTEND DEBUG - UPDATED AT:', new Date().toISOString(), '===');
+    console.log('Planning Page - Using getWeekStart():', weekStart.toISOString());
+    console.log('Planning Page - Week string:', weekString);
+    console.log('Planning Page - WeekStart day of week:', weekStart.getDay());
+    console.log('=== END PLANNING PAGE DEBUG ===');
+    
+    return weekString;
+  });
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,21 +64,26 @@ export default function PlanningPageContent({ teamId }: PlanningPageContentProps
   };
 
   const formatWeekRange = (weekStart: string) => {
-    const start = new Date(weekStart);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    
-    return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    try {
+      const start = new Date(weekStart + 'T00:00:00'); // Ensure proper timezone handling
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      
+      return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    } catch (error) {
+      console.error('Error formatting week range:', error);
+      return 'Invalid Date';
+    }
   };
 
   const goToNextWeek = () => {
-    const current = new Date(selectedWeek);
+    const current = new Date(selectedWeek + 'T00:00:00');
     current.setDate(current.getDate() + 7);
     setSelectedWeek(current.toISOString().split('T')[0]);
   };
 
   const goToPrevWeek = () => {
-    const current = new Date(selectedWeek);
+    const current = new Date(selectedWeek + 'T00:00:00');
     current.setDate(current.getDate() - 7);
     setSelectedWeek(current.toISOString().split('T')[0]);
   };

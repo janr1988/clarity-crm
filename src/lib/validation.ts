@@ -26,7 +26,7 @@ export const createTaskSchema = z.object({
   status: z.enum(["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).default("TODO"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
   dueDate: z.string().datetime().optional(),
-  assigneeId: z.string().uuid().optional(),
+  assigneeId: z.string().min(1).optional(),
   teamId: z.string().uuid().optional(),
 });
 
@@ -36,7 +36,7 @@ export const updateTaskSchema = z.object({
   status: z.enum(["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   dueDate: z.string().datetime().optional().nullable(),
-  assigneeId: z.string().uuid().optional().nullable(),
+  assigneeId: z.string().min(1).optional().nullable(),
   teamId: z.string().uuid().optional().nullable(),
 });
 
@@ -125,7 +125,7 @@ export const createCustomerSchema = z.object({
     .max(1000, "Notes must be less than 1000 characters")
     .optional()
     .or(z.literal("")),
-  assignedTo: z.string().uuid("Invalid user ID").optional(),
+  assignedTo: z.string().min(1, "Invalid user ID").optional(),
 });
 
 export const updateCustomerSchema = z.object({
@@ -138,7 +138,7 @@ export const updateCustomerSchema = z.object({
   source: z.enum(["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"]).optional(),
   value: z.number().positive().optional(),
   notes: z.string().optional().or(z.literal("")),
-  assignedTo: z.string().uuid().optional(),
+  assignedTo: z.string().min(1).optional(),
   companyId: z.string().uuid().optional(),
 });
 
@@ -162,7 +162,7 @@ export const createCompanySchema = z.object({
   description: z.string().optional().or(z.literal("")),
   status: z.enum(["ACTIVE", "PROSPECT", "PARTNER", "INACTIVE"]).optional(),
   foundedYear: z.number().int().min(1800).max(new Date().getFullYear()).optional(),
-  assignedTo: z.string().uuid().optional(),
+  assignedTo: z.string().min(1).optional(),
 });
 
 export const updateCompanySchema = z.object({
@@ -184,7 +184,7 @@ export const updateCompanySchema = z.object({
   description: z.string().optional().or(z.literal("")),
   status: z.enum(["ACTIVE", "PROSPECT", "PARTNER", "INACTIVE"]).optional(),
   foundedYear: z.number().int().min(1800).max(new Date().getFullYear()).optional(),
-  assignedTo: z.string().uuid().optional(),
+  assignedTo: z.string().min(1).optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;

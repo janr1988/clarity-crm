@@ -136,7 +136,7 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Team Capacity</h2>
           <p className="text-gray-600">
-            Week of {formatDate(capacity.weekStart)} - {formatDate(capacity.weekEnd)}
+            Week of {formatDate(capacity.weekStart)} - {formatDate(new Date(new Date(capacity.weekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toISOString())}
           </p>
         </div>
         

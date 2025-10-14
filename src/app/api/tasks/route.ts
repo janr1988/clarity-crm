@@ -20,10 +20,28 @@ export async function GET(request: NextRequest) {
 
     // Add date filtering if start and end are provided
     if (start && end) {
-      whereClause.createdAt = {
-        gte: new Date(start),
-        lte: new Date(end),
-      };
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      
+      // Determine if this is an upcoming view (future dates or very recent past)
+      // Allow for a 5-minute buffer to account for API call timing
+      const now = new Date();
+      const bufferTime = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+      const isUpcomingView = startDate >= bufferTime;
+      
+      if (isUpcomingView) {
+        // For upcoming views, filter by dueDate
+        whereClause.dueDate = {
+          gte: startDate,
+          lte: endDate,
+        };
+      } else {
+        // For past views, filter by createdAt
+        whereClause.createdAt = {
+          gte: startDate,
+          lte: endDate,
+        };
+      }
     }
 
     const tasks = await prisma.task.findMany({

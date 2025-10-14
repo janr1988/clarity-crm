@@ -18,18 +18,9 @@ function dateInPastMonthsBucket(index: number, total: number) {
 }
 
 async function main() {
-  console.log("🌱 Seeding related demo data (keeping existing users)…");
+  console.log("🌱 Seeding demo data with proper user names and emails…");
 
-  // Users laden (unverändert lassen)
-  const users = await prisma.user.findMany({ where: { isActive: true } });
-  if (users.length < 2) {
-    throw new Error("Need at least 2 active users to seed related data. Please create users first.");
-  }
-  const lead = users.find(u => u.role === "SALES_LEAD") ?? users[0];
-  const agents = users.filter(u => u.id !== lead.id);
-  const pickAgent = () => rand(agents).id;
-
-  // Bestehende Nicht-User Daten löschen
+  // Clear all data first
   await prisma.dealNote.deleteMany({});
   await prisma.deal.deleteMany({});
   await prisma.callNote.deleteMany({});
@@ -39,12 +30,67 @@ async function main() {
   await prisma.company.deleteMany({});
   await prisma.target.deleteMany({});
   await prisma.userCapacity.deleteMany({});
+  await prisma.user.deleteMany({});
   await prisma.team.deleteMany({});
 
-  // Team + Capacity
+  // Create Team first
   const team = await prisma.team.create({
     data: { name: "Sales Team", description: "Core sales team" },
   });
+
+  // Create users with proper names and emails
+  const userData = [
+    {
+      name: "Alexandra Müller",
+      email: "alexandra.mueller@clarity.com",
+      password: "$2b$10$JyE2GOLBaau04KAN8aGk5OPDJhkN25IrKlo1YD7XqA6VjaK7D.r2u", // lead123
+      role: "SALES_LEAD",
+      teamId: team.id,
+      isActive: true,
+    },
+    {
+      name: "Marcus Weber",
+      email: "marcus.weber@clarity.com",
+      password: "$2b$10$lhlkBrHOr5qGSMTzK3hgwuWxPLCRwK5CP706nZUQIdo4..h4tmu3u", // agent123
+      role: "SALES_AGENT",
+      teamId: team.id,
+      isActive: true,
+    },
+    {
+      name: "Sophie Schneider",
+      email: "sophie.schneider@clarity.com",
+      password: "$2b$10$lhlkBrHOr5qGSMTzK3hgwuWxPLCRwK5CP706nZUQIdo4..h4tmu3u", // agent123
+      role: "SALES_AGENT",
+      teamId: team.id,
+      isActive: true,
+    },
+    {
+      name: "Thomas Fischer",
+      email: "thomas.fischer@clarity.com",
+      password: "$2b$10$lhlkBrHOr5qGSMTzK3hgwuWxPLCRwK5CP706nZUQIdo4..h4tmu3u", // agent123
+      role: "SALES_AGENT",
+      teamId: team.id,
+      isActive: true,
+    },
+    {
+      name: "Sarah Thompson",
+      email: "sarah.thompson@clarity.com",
+      password: "$2b$10$lhlkBrHOr5qGSMTzK3hgwuWxPLCRwK5CP706nZUQIdo4..h4tmu3u", // agent123
+      role: "SALES_LEAD",
+      teamId: team.id,
+      isActive: true,
+    }
+  ];
+
+  const users = [];
+  for (const user of userData) {
+    const createdUser = await prisma.user.create({ data: user });
+    users.push(createdUser);
+  }
+
+  const lead = users.find(u => u.role === "SALES_LEAD" && u.name !== "Sarah Thompson") ?? users[0];
+  const agents = users.filter(u => u.id !== lead.id);
+  const pickAgent = () => rand(agents).id;
 
   await prisma.userCapacity.createMany({
     data: users.map(u => ({
@@ -124,12 +170,14 @@ async function main() {
     }
   }
 
-  // Deals (120), über 12 Monate
+  // Deals (120 über 12 Monate + 50 in letzten 30 Tagen für bessere KPIs)
   const dealNames = ["CRM Implementation","Cloud Migration","Data Platform","Security Audit","ERP Upgrade","E‑commerce","DevOps Consulting"];
   const stages = ["PROSPECTING","QUALIFICATION","PROPOSAL","NEGOTIATION","CLOSED_WON","CLOSED_LOST"];
   const totalDeals = 120;
 
   const deals = [] as Array<Awaited<ReturnType<typeof prisma.deal.create>>>;
+  
+  // Base deals über 12 Monate
   for (let i = 0; i < totalDeals; i++) {
     const company = rand(companies);
     const companyCustomers = customers.filter(c => c.companyId === company.id);
@@ -158,6 +206,49 @@ async function main() {
     }));
   }
 
+  // Extra deals für letzte 30 Tage (bessere KPI Visibility)
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  for (let i = 0; i < 50; i++) {
+    const company = rand(companies);
+    const companyCustomers = customers.filter(c => c.companyId === company.id);
+    const customer = companyCustomers.length ? rand(companyCustomers) : null;
+    
+    // Mehr CLOSED_WON/CLOSED_LOST für bessere Conversion Rate KPIs
+    const stageWeighted = i < 15 ? "CLOSED_WON" : i < 25 ? "CLOSED_LOST" : rand(stages);
+    
+    // 60% der Deals in letzten 7 Tagen, 40% zwischen 7-30 Tagen
+    const createdAt = new Date(
+      i < 30 
+        ? sevenDaysAgo.getTime() + Math.random() * (now.getTime() - sevenDaysAgo.getTime())
+        : thirtyDaysAgo.getTime() + Math.random() * (sevenDaysAgo.getTime() - thirtyDaysAgo.getTime())
+    );
+    
+    const expectedCloseDate = new Date(createdAt.getTime() + randomInt(7, 60) * 24 * 60 * 60 * 1000);
+    const isClosed = ["CLOSED_WON","CLOSED_LOST"].includes(stageWeighted);
+    
+    deals.push(await prisma.deal.create({
+      data: {
+        name: rand(dealNames),
+        description: customer ? `Deal with ${customer.name} at ${company.name}` : `Deal at ${company.name}`,
+        value: randomInt(15_000, 350_000),
+        probability: stageWeighted === "CLOSED_WON" ? 100 : stageWeighted === "CLOSED_LOST" ? 0 : randomInt(20, 90),
+        stage: stageWeighted,
+        expectedCloseDate,
+        actualCloseDate: isClosed ? new Date(createdAt.getTime() + randomInt(1, 14) * 24 * 60 * 60 * 1000) : null,
+        source: rand(["WEBSITE","REFERRAL","PARTNER","OUTBOUND"]),
+        ownerId: pickAgent(),
+        createdBy: lead.id,
+        customerId: customer ? customer.id : null,
+        companyId: company.id,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    }));
+  }
+
   // Deal Notes (80)
   for (let i = 0; i < Math.min(80, deals.length); i++) {
     const createdAt = dateInPastMonthsBucket(i, 80);
@@ -171,7 +262,7 @@ async function main() {
     });
   }
 
-  // Activities (100)
+  // Activities (100 über 12 Monate + 40 in letzten 30 Tagen)
   for (let i = 0; i < 100; i++) {
     const c = rand(customers);
     const createdAt = dateInPastMonthsBucket(i, 100);
@@ -194,7 +285,38 @@ async function main() {
     });
   }
 
-  // Tasks (100)
+  // Extra activities für letzte 30 Tage
+  for (let i = 0; i < 40; i++) {
+    const c = rand(customers);
+    const activityTypes = ["CALL", "MEETING", "EMAIL"];
+    const type = rand(activityTypes);
+    
+    const createdAt = new Date(
+      i < 25 
+        ? sevenDaysAgo.getTime() + Math.random() * (now.getTime() - sevenDaysAgo.getTime())
+        : thirtyDaysAgo.getTime() + Math.random() * (sevenDaysAgo.getTime() - thirtyDaysAgo.getTime())
+    );
+    
+    await prisma.activity.create({
+      data: {
+        type,
+        title: `${type} with ${c.name}`,
+        description: `Follow-up discussion at ${c.company}`,
+        duration: randomInt(15, 90),
+        userId: pickAgent(),
+        customerId: c.id,
+        companyId: c.companyId!,
+        plannedWeek: null,
+        actualDate: createdAt,
+        kanbanStatus: Math.random() < 0.8 ? "COMPLETED" : "IN_PROGRESS",
+        activityType: type,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+  }
+
+  // Tasks (100 über 12 Monate + 30 in letzten 30 Tagen)
   for (let i = 0; i < 100; i++) {
     const c = rand(customers);
     const createdAt = dateInPastMonthsBucket(i, 100);
@@ -215,6 +337,38 @@ async function main() {
         companyId: c.companyId!,
         estimatedDuration: randomInt(20, 120),
         actualDuration: completed ? randomInt(20, 120) : null,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+  }
+
+  // Extra tasks für letzte 30 Tage
+  for (let i = 0; i < 30; i++) {
+    const c = rand(customers);
+    const createdAt = new Date(
+      i < 20 
+        ? sevenDaysAgo.getTime() + Math.random() * (now.getTime() - sevenDaysAgo.getTime())
+        : thirtyDaysAgo.getTime() + Math.random() * (sevenDaysAgo.getTime() - thirtyDaysAgo.getTime())
+    );
+    const dueDate = new Date(createdAt.getTime() + randomInt(1, 14) * 24 * 60 * 60 * 1000);
+    const completed = Math.random() < 0.7; // Höhere Completion Rate
+    
+    await prisma.task.create({
+      data: {
+        title: `${rand(["Call","Email","Demo","Meeting"])} with ${c.name}`,
+        description: `${rand(["Follow-up on proposal","Schedule demo","Send pricing","Close deal"])} at ${c.company}`,
+        status: completed ? "COMPLETED" : rand(["TODO","IN_PROGRESS"]),
+        priority: rand(["LOW","MEDIUM","HIGH"]),
+        dueDate,
+        actualEndDate: completed ? new Date(createdAt.getTime() + randomInt(1, 10) * 24 * 60 * 60 * 1000) : null,
+        assigneeId: pickAgent(),
+        createdById: lead.id,
+        teamId: team.id,
+        customerId: c.id,
+        companyId: c.companyId!,
+        estimatedDuration: randomInt(30, 120),
+        actualDuration: completed ? randomInt(30, 120) : null,
         createdAt,
         updatedAt: createdAt,
       },

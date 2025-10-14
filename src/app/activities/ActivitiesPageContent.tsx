@@ -6,6 +6,9 @@ import Link from "next/link";
 import { formatDateTime, getActivityIcon } from "@/lib/utils";
 import { TimeFilter as TimeFilterType, getDateRange, getDefaultTimeFilter } from "@/lib/dateUtils";
 import TimeFilterComponent from "@/components/TimeFilter";
+import TeamMemberFilter from "@/components/TeamMemberFilter";
+import { useSession } from "next-auth/react";
+import { isSalesLead } from "@/lib/authorization";
 
 interface Activity {
   id: string;
@@ -21,10 +24,24 @@ interface Activity {
   _source?: "activity" | "callNote" | "task";
 }
 
-async function getActivities(timeFilter: TimeFilterType): Promise<Activity[]> {
+async function getActivities(timeFilter: TimeFilterType, memberFilter: string, currentUserId: string): Promise<Activity[]> {
   const { start, end } = getDateRange(timeFilter);
   
-  const response = await fetch(`/api/activities?start=${start.toISOString()}&end=${end.toISOString()}`);
+  // Determine userId parameter based on filter
+  let userId = '';
+  if (memberFilter === 'me') {
+    userId = currentUserId;
+  } else if (memberFilter !== 'all') {
+    userId = memberFilter;
+  }
+  
+  const params = new URLSearchParams({
+    start: start.toISOString(),
+    end: end.toISOString(),
+    ...(userId && { userId })
+  });
+  
+  const response = await fetch(`/api/activities?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Failed to fetch activities');
   }
@@ -32,8 +49,10 @@ async function getActivities(timeFilter: TimeFilterType): Promise<Activity[]> {
 }
 
 export default function ActivitiesPageContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const timeFilter = (searchParams.get('filter') as TimeFilterType) || getDefaultTimeFilter('activities');
+  const memberFilter = searchParams.get('member') || (isSalesLead(session) ? 'all' : 'me');
   
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +62,8 @@ export default function ActivitiesPageContent() {
     async function fetchActivities() {
       try {
         setLoading(true);
-        const activitiesData = await getActivities(timeFilter);
+        const currentUserId = session?.user?.id || '';
+        const activitiesData = await getActivities(timeFilter, memberFilter, currentUserId);
         setActivities(activitiesData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -52,8 +72,10 @@ export default function ActivitiesPageContent() {
       }
     }
 
-    fetchActivities();
-  }, [timeFilter]);
+    if (session?.user?.id) {
+      fetchActivities();
+    }
+  }, [timeFilter, memberFilter, session?.user?.id]);
 
   const activityStats = {
     calls: activities.filter((a) => a.type === "CALL").length,
@@ -99,6 +121,7 @@ export default function ActivitiesPageContent() {
         </div>
         <div className="flex items-center gap-4">
           <TimeFilterComponent page="activities" />
+          <TeamMemberFilter page="activities" />
           <Link
             href="/activities/new"
             className="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"

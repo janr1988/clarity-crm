@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isSalesLead } from "@/lib/authorization";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import DashboardPageContent from "./DashboardPageContent";
 
 export default async function Dashboard() {
@@ -14,6 +15,14 @@ export default async function Dashboard() {
   }
   
   const isLead = isSalesLead(session);
+
+  // Get team ID for Sales Lead
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { teamId: true }
+  });
+  
+  const teamId = user?.teamId;
 
   return (
     <Suspense fallback={
@@ -33,6 +42,7 @@ export default async function Dashboard() {
         userId={session.user.id}
         isLead={isLead}
         userName={session.user.name}
+        teamId={teamId}
       />
     </Suspense>
   );

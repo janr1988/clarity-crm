@@ -26,7 +26,19 @@ export async function GET(
     const weekParam = searchParams.get("week");
 
     // Use provided week or current week
-    const weekStart = weekParam ? new Date(weekParam) : getWeekStart();
+    let weekStart: Date;
+    if (weekParam) {
+      // If weekParam is just a date string (YYYY-MM-DD), convert it to a proper Date
+      if (weekParam.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // Parse as local date to avoid timezone issues
+        const [year, month, day] = weekParam.split('-').map(Number);
+        weekStart = new Date(year, month - 1, day); // month is 0-indexed
+      } else {
+        weekStart = new Date(weekParam);
+      }
+    } else {
+      weekStart = getWeekStart();
+    }
 
     const userCapacity = await getUserCapacityInfo(params.userId, weekStart);
 

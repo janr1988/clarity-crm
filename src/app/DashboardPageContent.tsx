@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatDate, getInitials } from "@/lib/utils";
 import { TimeFilter as TimeFilterType, getDateRange, getDefaultTimeFilter } from "@/lib/dateUtils";
-import TimeFilterComponent from "@/components/TimeFilter";
+import TimeFilterWithUpcoming from "@/components/TimeFilterWithUpcoming";
+import TeamCapacityOverview from "@/components/TeamCapacityOverview";
 
 interface User {
   id: string;
@@ -57,11 +58,13 @@ interface DashboardData {
   tasks: Task[];
   activities: Activity[];
   callNotes: CallNote[];
+  upcomingTasks: Task[];
   stats: {
     totalUsers: number;
     activeTasks: number;
     todayActivities: number;
     totalCalls: number;
+    upcomingTasks: number;
   };
 }
 
@@ -79,9 +82,10 @@ interface DashboardPageContentProps {
   userId?: string;
   isLead?: boolean;
   userName?: string;
+  teamId?: string;
 }
 
-export default function DashboardPageContent({ userId, isLead, userName }: DashboardPageContentProps) {
+export default function DashboardPageContent({ userId, isLead, userName, teamId }: DashboardPageContentProps) {
   const searchParams = useSearchParams();
   const timeFilter = (searchParams.get('filter') as TimeFilterType) || getDefaultTimeFilter('dashboard');
   
@@ -104,6 +108,21 @@ export default function DashboardPageContent({ userId, isLead, userName }: Dashb
 
     fetchDashboardData();
   }, [timeFilter, userId, isLead]);
+
+  const getWeekStart = () => {
+    const { start } = getDateRange(timeFilter);
+    // If it's an upcoming filter, use current week start
+    if (timeFilter.startsWith('upcoming')) {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() + daysToMonday);
+      weekStart.setHours(0, 0, 0, 0);
+      return weekStart.toISOString().split('T')[0];
+    }
+    return start.toISOString().split('T')[0];
+  };
 
   if (loading) {
     return (
@@ -143,7 +162,7 @@ export default function DashboardPageContent({ userId, isLead, userName }: Dashb
             Welcome to Clarity CRM, {userName}
           </p>
         </div>
-        <TimeFilterComponent page="dashboard" />
+        <TimeFilterWithUpcoming page="dashboard" />
       </div>
 
       {/* Team Performance KPIs - Only for Sales Lead */}
@@ -160,6 +179,10 @@ export default function DashboardPageContent({ userId, isLead, userName }: Dashb
             <div className="bg-white p-6 rounded shadow-card">
               <div className="text-sm text-gray-600 mb-1">Team Active Tasks</div>
               <div className="text-3xl font-bold text-primary">{data.stats.activeTasks}</div>
+            </div>
+            <div className="bg-white p-6 rounded shadow-card">
+              <div className="text-sm text-gray-600 mb-1">Upcoming Tasks (7 days)</div>
+              <div className="text-3xl font-bold text-orange-600">{data.stats.upcomingTasks}</div>
             </div>
             <div className="bg-white p-6 rounded shadow-card">
               <div className="text-sm text-gray-600 mb-1">Today&apos;s Team Activities</div>
@@ -196,7 +219,58 @@ export default function DashboardPageContent({ userId, isLead, userName }: Dashb
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+      {/* Upcoming Tasks - Only for Sales Lead */}
+      {isLead && data.upcomingTasks.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            📋 Upcoming Tasks (Next 7 Days)
+          </h2>
+          <div className="bg-white p-6 rounded shadow-card">
+            <div className="space-y-3">
+              {data.upcomingTasks.slice(0, 8).map((task) => (
+                <div key={task.id} className="flex items-center justify-between p-3 border border-gray-200 rounded hover:border-primary transition-colors">
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{task.title}</div>
+                    {task.assignee && (
+                      <div className="text-sm text-gray-600 mt-1">
+                        Assigned to: {task.assignee.name}
+                      </div>
+                    )}
+                    {task.dueDate && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Due: {formatDate(task.dueDate)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded text-xs ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' : task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {task.priority}
+                    </span>
+                    <Link
+                      href={`/tasks/${task.id}`}
+                      className="text-blue-500 hover:text-blue-700 text-sm"
+                    >
+                      View
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {data.upcomingTasks.length > 8 && (
+              <div className="mt-4 text-center">
+                <Link
+                  href="/tasks?filter=upcoming7d"
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  View all upcoming tasks ({data.upcomingTasks.length})
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Team Overview - Only for Sales Lead */}
         {isLead && (
           <div className="bg-white p-6 rounded shadow-card">
@@ -231,6 +305,11 @@ export default function DashboardPageContent({ userId, isLead, userName }: Dashb
               ))}
             </div>
           </div>
+        )}
+
+        {/* Team Capacity Overview - Only for Sales Lead */}
+        {isLead && teamId && (
+          <TeamCapacityOverview teamId={teamId} weekStart={getWeekStart()} />
         )}
 
         {/* Recent Activities */}

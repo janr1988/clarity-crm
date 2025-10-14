@@ -10,6 +10,8 @@ export type TimeFilter =
   | 'month'
   | 'quarter'
   | 'year'
+  | 'upcoming7d'
+  | 'upcoming30d'
   | 'all';
 
 export interface DateRange {
@@ -22,6 +24,19 @@ export const TIME_FILTERS = [
   { label: "Last 7 days", value: "7d" as TimeFilter },
   { label: "Last 30 days", value: "30d" as TimeFilter },
   { label: "Last 90 days", value: "90d" as TimeFilter },
+  { label: "This month", value: "month" as TimeFilter },
+  { label: "This quarter", value: "quarter" as TimeFilter },
+  { label: "This year", value: "year" as TimeFilter },
+  { label: "All time", value: "all" as TimeFilter },
+] as const;
+
+export const TIME_FILTERS_WITH_UPCOMING = [
+  { label: "Today", value: "today" as TimeFilter },
+  { label: "Last 7 days", value: "7d" as TimeFilter },
+  { label: "Last 30 days", value: "30d" as TimeFilter },
+  { label: "Last 90 days", value: "90d" as TimeFilter },
+  { label: "Next 7 days", value: "upcoming7d" as TimeFilter },
+  { label: "Next 30 days", value: "upcoming30d" as TimeFilter },
   { label: "This month", value: "month" as TimeFilter },
   { label: "This quarter", value: "quarter" as TimeFilter },
   { label: "This year", value: "year" as TimeFilter },
@@ -77,6 +92,18 @@ export function getDateRange(filter: TimeFilter): DateRange {
         end: endOfYear(now)
       };
     
+    case 'upcoming7d':
+      return {
+        start: now,
+        end: addDays(now, 7)
+      };
+    
+    case 'upcoming30d':
+      return {
+        start: now,
+        end: addDays(now, 30)
+      };
+    
     case 'all':
     default:
       return {
@@ -104,6 +131,12 @@ function endOfDay(date: Date): Date {
 function subDays(date: Date, days: number): Date {
   const result = new Date(date);
   result.setDate(result.getDate() - days);
+  return result;
+}
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
   return result;
 }
 
@@ -176,7 +209,7 @@ export function formatDateRange(filter: TimeFilter): string {
 export function getDefaultTimeFilter(page: string): TimeFilter {
   switch (page) {
     case 'dashboard':
-      return '7d';
+      return 'upcoming7d';
     case 'tasks':
       return '30d';
     case 'activities':
@@ -187,6 +220,8 @@ export function getDefaultTimeFilter(page: string): TimeFilter {
       return '30d';
     case 'deals':
       return '90d';
+    case 'user-details':
+      return 'upcoming7d';
     default:
       return '30d';
   }

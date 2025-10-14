@@ -79,6 +79,12 @@ export default async function UsersPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Team Members</h1>
           <p className="text-gray-600 mt-1">Manage your sales team with capacity insights</p>
+          {/* Team ID Debug Info */}
+          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+            <span className="text-blue-700">
+              <strong>Team ID:</strong> {teamId}
+            </span>
+          </div>
         </div>
         <Link
           href="/users/new"

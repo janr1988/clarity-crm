@@ -15,18 +15,16 @@ export function isSalesAgent(session: Session | null): boolean {
 
 /**
  * Check if user can view details of a specific user
- * Sales Lead: Can view all users
- * Sales Agent: Can only view their own profile
+ * Sales Lead: Can view all users in their team
+ * Sales Agent: Cannot view any user details (redirected to dashboard)
  */
 export function canViewUserDetails(session: Session | null, targetUserId?: string): boolean {
   if (!session) return false;
   
-  // Sales Lead can view all user details
+  // Only Sales Lead can view user details
   if (isSalesLead(session)) return true;
   
-  // Sales Agent can only view their own profile
-  if (isSalesAgent(session) && targetUserId === session.user.id) return true;
-  
+  // Sales Agents cannot view any user details
   return false;
 }
 

@@ -133,15 +133,15 @@ function LoginForm() {
 
             <div className="space-y-2">
               <button
-                onClick={() => quickLogin("lead@clarity.com", "lead123")}
+                onClick={() => quickLogin("alexandra.mueller@clarity.com", "lead123")}
                 disabled={isLoading}
                 className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors text-left"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium">Sales Lead</div>
+                    <div className="font-medium">Alexandra Müller (Lead)</div>
                     <div className="text-xs text-gray-500">
-                      lead@clarity.com • lead123
+                      alexandra.mueller@clarity.com • lead123
                     </div>
                   </div>
                   <span className="text-sm text-primary">→</span>
@@ -149,15 +149,31 @@ function LoginForm() {
               </button>
 
               <button
-                onClick={() => quickLogin("john@clarity.com", "agent123")}
+                onClick={() => quickLogin("marcus.weber@clarity.com", "agent123")}
                 disabled={isLoading}
                 className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors text-left"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium">Sales Agent</div>
+                    <div className="font-medium">Marcus Weber (Agent)</div>
                     <div className="text-xs text-gray-500">
-                      john@clarity.com • agent123
+                      marcus.weber@clarity.com • agent123
+                    </div>
+                  </div>
+                  <span className="text-sm text-primary">→</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => quickLogin("sarah.thompson@clarity.com", "agent123")}
+                disabled={isLoading}
+                className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors text-left"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">Sarah Thompson (Lead)</div>
+                    <div className="text-xs text-gray-500">
+                      sarah.thompson@clarity.com • agent123
                     </div>
                   </div>
                   <span className="text-sm text-primary">→</span>

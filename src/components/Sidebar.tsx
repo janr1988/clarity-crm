@@ -50,7 +50,7 @@ export default function Sidebar() {
         commonItems[0], // Dashboard
         { name: "KPIs", href: "/kpis", icon: ChartBarSquareIcon },
         { name: "Team", href: "/users", icon: UsersIcon },
-        // { name: "Planning", href: "/planning", icon: CalendarDaysIcon }, // Temporarily disabled
+        { name: "Planning", href: "/planning", icon: CalendarDaysIcon },
         { name: "AI Insights", href: "/insights", icon: CpuChipIcon },
         ...commonItems.slice(1), // Rest of common items
       ];

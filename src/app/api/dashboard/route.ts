@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
       },
     } : {};
 
-    const [users, tasks, activities, callNotes] = await Promise.all([
+    // Determine if we're looking at upcoming tasks (for planning)
+    // Allow for a 5-minute buffer to account for API call timing
+    const now = new Date();
+    const bufferTime = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+    const isUpcomingView = start && new Date(start) >= bufferTime;
+    
+    const [users, tasks, activities, callNotes, upcomingTasks] = await Promise.all([
       prisma.user.findMany({
         where: { isActive: true },
         include: {
@@ -33,7 +39,13 @@ export async function GET(request: NextRequest) {
           status: { in: ["TODO", "IN_PROGRESS"] },
           // Sales Agent only sees their own tasks
           ...(userId && !isLead && { assigneeId: userId }),
-          ...dateFilter,
+          // For upcoming views, filter by dueDate; for past views, filter by createdAt
+          ...(isUpcomingView ? {
+            dueDate: {
+              gte: new Date(start!),
+              lte: new Date(end!),
+            }
+          } : dateFilter),
         },
         include: {
           assignee: true,
@@ -65,6 +77,21 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: "desc" },
         take: 5,
       }),
+      // Get upcoming tasks for Sales Leads (next 7 days)
+      isLead ? prisma.task.findMany({
+        where: {
+          status: { in: ["TODO", "IN_PROGRESS"] },
+          dueDate: {
+            gte: new Date(),
+            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Next 7 days
+          },
+        },
+        include: {
+          assignee: true,
+        },
+        orderBy: { dueDate: "asc" },
+        take: 15,
+      }) : Promise.resolve([]),
     ]);
 
     // Calculate stats
@@ -83,6 +110,7 @@ export async function GET(request: NextRequest) {
       activeTasks: tasks.length,
       todayActivities,
       totalCalls: callNotes.length,
+      upcomingTasks: upcomingTasks.length,
     };
 
     return NextResponse.json({
@@ -90,6 +118,7 @@ export async function GET(request: NextRequest) {
       tasks,
       activities,
       callNotes,
+      upcomingTasks,
       stats,
     });
   } catch (error) {

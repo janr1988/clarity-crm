@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    threads: false,
     setupFiles: ['./test/setupTests.ts'],
     include: ['test/**/*.test.ts', 'test/**/*.test.tsx'],
     coverage: {
