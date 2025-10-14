@@ -27,15 +27,31 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const stage = searchParams.get("stage");
     const ownerId = searchParams.get("ownerId");
+    const filter = searchParams.get("filter");
+
+    // Import date utilities
+    const { getDateRange } = await import("@/lib/dateUtils");
+    const { start, end } = getDateRange(filter as any);
 
     // Sales Agent can only see their own deals
     const isAgent = session.user.role === "SALES_AGENT";
     const filterOwnerId = isAgent ? session.user.id : ownerId;
 
+    // Date filter for deals
+    const dateFilter = {
+      OR: [
+        // For deals without actualCloseDate, use createdAt
+        { actualCloseDate: null, createdAt: { gte: start, lte: end } },
+        // For deals with actualCloseDate, use actualCloseDate
+        { actualCloseDate: { gte: start, lte: end } }
+      ]
+    };
+
     const deals = await prisma.deal.findMany({
       where: {
         ...(stage && { stage }),
         ...(filterOwnerId && { ownerId: filterOwnerId }),
+        ...dateFilter,
       },
       include: {
         customer: { select: { id: true, name: true, email: true } },
@@ -46,7 +62,17 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(deals);
+    // Calculate stats
+    const stats = {
+      totalValue: deals.reduce((sum, d) => sum + d.value, 0),
+      weightedValue: deals.reduce((sum, d) => sum + d.value * (d.probability / 100), 0),
+      dealCount: deals.length,
+      wonDeals: deals.filter((d) => d.stage === "CLOSED_WON").length,
+      lostDeals: deals.filter((d) => d.stage === "CLOSED_LOST").length,
+      activeDeals: deals.filter((d) => d.stage !== "CLOSED_WON" && d.stage !== "CLOSED_LOST").length,
+    };
+
+    return NextResponse.json({ deals, stats });
   } catch (error) {
     console.error("Error fetching deals:", error);
     return NextResponse.json(

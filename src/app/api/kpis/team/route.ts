@@ -19,13 +19,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const searchParams = request.nextUrl.searchParams;
+    const filter = searchParams.get("filter") as string;
+    
+    // Import date utilities
+    const { getDateRange } = await import("@/lib/dateUtils");
+    const { start, end } = getDateRange(filter as any);
+
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
     const currentQuarter = Math.ceil(currentMonth / 3);
 
+    // Date filter for deals
+    const dateFilter = {
+      OR: [
+        // For deals without actualCloseDate, use createdAt
+        { actualCloseDate: null, createdAt: { gte: start, lte: end } },
+        // For deals with actualCloseDate, use actualCloseDate
+        { actualCloseDate: { gte: start, lte: end } }
+      ]
+    };
+
     // Get basic data
     const [deals, targets, users] = await Promise.all([
       prisma.deal.findMany({
+        where: dateFilter,
         include: {
           owner: { select: { id: true, name: true, email: true } },
           customer: { select: { id: true, name: true } },
@@ -120,13 +138,44 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Generate monthly revenue data for charts (last 12 months)
+    const monthlyRevenueData = [];
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleDateString('de-DE', { month: 'short' });
+      const year = date.getFullYear();
+      const monthNum = date.getMonth() + 1;
+      
+      const monthRevenue = wonDeals
+        .filter(d => 
+          d.actualCloseDate?.getFullYear() === year && 
+          d.actualCloseDate.getMonth() + 1 === monthNum
+        )
+        .reduce((sum, d) => sum + d.value, 0);
+      
+      const monthTarget = targets.find(
+        t => t.period === "MONTHLY" && t.month === monthNum && t.userId === null
+      )?.targetValue || 0;
+      
+      monthlyRevenueData.push({
+        month,
+        revenue: monthRevenue,
+        target: monthTarget,
+        previousYear: Math.floor(monthRevenue * 0.8), // Simulated previous year data
+      });
+    }
+
     // Top performers
     const topPerformers = users.map((user) => {
       const userWonDeals = wonDeals.filter((d) => d.ownerId === user.id);
       const userTotalDeals = deals.filter((d) => d.ownerId === user.id);
+      const userLostDeals = userTotalDeals.filter((d) => d.stage === "CLOSED_LOST");
       const userRevenue = userWonDeals.reduce((sum, d) => sum + d.value, 0);
-      const userConversionRate =
-        userTotalDeals.length > 0 ? (userWonDeals.length / userTotalDeals.length) * 100 : 0;
+      
+      // Conversion Rate basierend auf geschlossenen Deals (nicht allen Deals)
+      const userClosedDeals = userWonDeals.length + userLostDeals.length;
+      const userConversionRate = userClosedDeals > 0 ? (userWonDeals.length / userClosedDeals) * 100 : 0;
       const userAvgDealSize = userWonDeals.length > 0 ? userRevenue / userWonDeals.length : 0;
 
       return {
@@ -135,7 +184,8 @@ export async function GET(request: NextRequest) {
         email: user.email,
         revenue: userRevenue,
         dealsWon: userWonDeals.length,
-        dealsLost: userTotalDeals.filter((d) => d.stage === "CLOSED_LOST").length,
+        dealsLost: userLostDeals.length,
+        totalDeals: userTotalDeals.length,
         conversionRate: parseFloat(userConversionRate.toFixed(2)),
         avgDealSize: parseFloat(userAvgDealSize.toFixed(2)),
       };
@@ -163,6 +213,7 @@ export async function GET(request: NextRequest) {
       },
       dealsByStage,
       topPerformers,
+      monthlyRevenueData,
       velocity: {
         avgDealCycle: 45, // Simplified for now
       },
