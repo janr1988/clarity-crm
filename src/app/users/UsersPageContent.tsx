@@ -43,35 +43,7 @@ interface UsersPageContentProps {
 
 export default function UsersPageContent({ users, teamId }: UsersPageContentProps) {
   const [capacityData, setCapacityData] = useState<Record<string, CapacityInfo>>({});
-  const [loading, setLoading] = useState(true);
-  const [weekStart] = useState(getWeekStart().toISOString().split('T')[0]);
-
-  useEffect(() => {
-    fetchTeamCapacity();
-  }, [teamId, weekStart]);
-
-  const fetchTeamCapacity = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/capacity/team?teamId=${teamId}&week=${weekStart}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Convert array to object keyed by userId
-        const capacityMap: Record<string, CapacityInfo> = {};
-        data.teamCapacity.forEach((cap: CapacityInfo) => {
-          capacityMap[cap.userId] = cap;
-        });
-        
-        setCapacityData(capacityMap);
-      }
-    } catch (err) {
-      console.error("Error fetching capacity data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(false); // Start with false to avoid blocking
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -79,7 +51,7 @@ export default function UsersPageContent({ users, teamId }: UsersPageContentProp
         <TeamMemberCard
           key={user.id}
           user={user}
-          capacityInfo={user.role === "SALES_AGENT" ? capacityData[user.id] : undefined}
+          capacityInfo={undefined} // Temporarily disable capacity data
         />
       ))}
     </div>

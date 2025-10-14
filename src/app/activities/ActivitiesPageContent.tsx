@@ -18,6 +18,7 @@ interface Activity {
     id: string;
     name: string;
   };
+  _source?: "activity" | "callNote" | "task";
 }
 
 async function getActivities(timeFilter: TimeFilterType): Promise<Activity[]> {
@@ -58,7 +59,8 @@ export default function ActivitiesPageContent() {
     calls: activities.filter((a) => a.type === "CALL").length,
     meetings: activities.filter((a) => a.type === "MEETING").length,
     emails: activities.filter((a) => a.type === "EMAIL").length,
-    other: activities.filter((a) => a.type === "NOTE" || a.type === "OTHER").length,
+    tasks: activities.filter((a) => a.type === "TASK" || a.type === "TASK_COMPLETED").length,
+    notes: activities.filter((a) => a.type === "NOTE").length,
   };
 
   if (loading) {
@@ -121,8 +123,8 @@ export default function ActivitiesPageContent() {
           <div className="text-3xl font-bold text-gray-900">{activityStats.emails}</div>
         </div>
         <div className="bg-white p-6 rounded shadow-card">
-          <div className="text-sm text-gray-600 mb-1">📝 Notes</div>
-          <div className="text-3xl font-bold text-gray-900">{activityStats.other}</div>
+          <div className="text-sm text-gray-600 mb-1">✅ Tasks</div>
+          <div className="text-3xl font-bold text-gray-900">{activityStats.tasks}</div>
         </div>
       </div>
 

@@ -133,7 +133,7 @@ export default async function UserDetailPage({
           </div>
         </div>
 
-        {/* Capacity Widget - Only for Sales Agents and only visible to Sales Leads */}
+        {/* Capacity Widget */}
         {user.role === "SALES_AGENT" && isSalesLead(session) && (
           <div className="lg:col-span-1">
             <Suspense fallback={

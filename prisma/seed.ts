@@ -1,933 +1,263 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+function rand<T>(arr: T[]) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randomInt(min: number, max: number) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+// Gleichmäßige Verteilung innerhalb der letzten 12 Monate
+function dateInPastMonthsBucket(index: number, total: number) {
+  const monthsSpan = 12;
+  const bucket = Math.floor((index / total) * monthsSpan); // 0..11
+  const now = new Date();
+  const d = new Date(now);
+  d.setMonth(now.getMonth() - (monthsSpan - 1 - bucket));
+  d.setDate(randomInt(1, 28));
+  d.setHours(randomInt(8, 18), randomInt(0, 59), randomInt(0, 59), 0);
+  return d;
+}
+
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("🌱 Seeding related demo data (keeping existing users)…");
 
-  // Create teams
-  const salesTeam = await prisma.team.upsert({
-    where: { id: "team-1" },
-    update: {},
-    create: {
-      id: "team-1",
-      name: "Sales Team",
-      description: "Main sales team",
-    },
+  // Users laden (unverändert lassen)
+  const users = await prisma.user.findMany({ where: { isActive: true } });
+  if (users.length < 2) {
+    throw new Error("Need at least 2 active users to seed related data. Please create users first.");
+  }
+  const lead = users.find(u => u.role === "SALES_LEAD") ?? users[0];
+  const agents = users.filter(u => u.id !== lead.id);
+  const pickAgent = () => rand(agents).id;
+
+  // Bestehende Nicht-User Daten löschen
+  await prisma.dealNote.deleteMany({});
+  await prisma.deal.deleteMany({});
+  await prisma.callNote.deleteMany({});
+  await prisma.task.deleteMany({});
+  await prisma.activity.deleteMany({});
+  await prisma.customer.deleteMany({});
+  await prisma.company.deleteMany({});
+  await prisma.target.deleteMany({});
+  await prisma.userCapacity.deleteMany({});
+  await prisma.team.deleteMany({});
+
+  // Team + Capacity
+  const team = await prisma.team.create({
+    data: { name: "Sales Team", description: "Core sales team" },
   });
 
-  // Hash passwords for demo users
-  const leadPassword = await bcrypt.hash("lead123", 10);
-  const agentPassword = await bcrypt.hash("agent123", 10);
-
-  // Create users
-  const salesLead = await prisma.user.upsert({
-    where: { email: "lead@clarity.com" },
-    update: {},
-    create: {
-      email: "lead@clarity.com",
-      name: "Sarah Thompson",
-      password: leadPassword,
-      role: "SALES_LEAD",
-      teamId: salesTeam.id,
-      isActive: true,
-    },
-  });
-
-  const agent1 = await prisma.user.upsert({
-    where: { email: "john@clarity.com" },
-    update: {},
-    create: {
-      email: "john@clarity.com",
-      name: "John Davis",
-      password: agentPassword,
-      role: "SALES_AGENT",
-      teamId: salesTeam.id,
-      isActive: true,
-    },
-  });
-
-  const agent2 = await prisma.user.upsert({
-    where: { email: "emma@clarity.com" },
-    update: {},
-    create: {
-      email: "emma@clarity.com",
-      name: "Emma Wilson",
-      password: agentPassword,
-      role: "SALES_AGENT",
-      teamId: salesTeam.id,
-      isActive: true,
-    },
-  });
-
-  const agent3 = await prisma.user.upsert({
-    where: { email: "mike@clarity.com" },
-    update: {},
-    create: {
-      email: "mike@clarity.com",
-      name: "Mike Chen",
-      password: agentPassword,
-      role: "SALES_AGENT",
-      teamId: salesTeam.id,
-      isActive: true,
-    },
-  });
-
-  // Create capacity settings for all users
   await prisma.userCapacity.createMany({
-    data: [
-      {
-        userId: salesLead.id,
-        maxItemsPerWeek: 10, // Sales Lead can handle more
-        workingDays: "monday,tuesday,wednesday,thursday,friday",
-        workingHoursStart: 9,
-        workingHoursEnd: 18,
-        isActive: true,
-      },
-      {
-        userId: agent1.id,
-        maxItemsPerWeek: 8,
-        workingDays: "monday,tuesday,wednesday,thursday,friday",
-        workingHoursStart: 9,
-        workingHoursEnd: 17,
-        isActive: true,
-      },
-      {
-        userId: agent2.id,
-        maxItemsPerWeek: 6, // Emma prefers lighter workload
-        workingDays: "monday,tuesday,wednesday,thursday,friday",
-        workingHoursStart: 8,
-        workingHoursEnd: 16,
-        isActive: true,
-      },
-      {
-        userId: agent3.id,
-        maxItemsPerWeek: 8,
-        workingDays: "monday,tuesday,wednesday,thursday,friday",
-        workingHoursStart: 9,
-        workingHoursEnd: 17,
-        isActive: true,
-      },
-    ],
+    data: users.map(u => ({
+      userId: u.id,
+      maxItemsPerWeek: u.role === "SALES_LEAD" ? 10 : 8,
+      workingDays: "monday,tuesday,wednesday,thursday,friday",
+      workingHoursStart: 9,
+      workingHoursEnd: 17,
+      isActive: true,
+    })),
   });
 
-  // Create some tasks
-  await prisma.task.createMany({
-    data: [
-      {
-        title: "Follow up with Acme Corp",
-        description: "Discuss Q4 contract renewal",
-        status: "IN_PROGRESS",
-        priority: "HIGH",
-        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-        assigneeId: agent1.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-      },
-      {
-        title: "Prepare demo for TechStart",
-        description: "Product demonstration scheduled for next week",
-        status: "TODO",
-        priority: "MEDIUM",
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        assigneeId: agent2.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-      },
-      {
-        title: "Send proposal to GlobalTech",
-        description: "Enterprise pricing proposal",
-        status: "COMPLETED",
-        priority: "HIGH",
-        assigneeId: agent1.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-      },
-      {
-        title: "Research new leads in fintech",
-        description: "Identify 10 potential clients",
-        status: "TODO",
-        priority: "LOW",
-        assigneeId: agent3.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-      },
-    ],
-  });
-
-  // Create some planned tasks for this week (demonstrating capacity planning)
-  const currentWeekStart = new Date();
-  currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1); // Monday
-  currentWeekStart.setHours(0, 0, 0, 0);
-
-  await prisma.task.createMany({
-    data: [
-      {
-        title: "Call Acme Corp - Contract Review",
-        description: "Follow up on contract terms",
-        status: "TODO",
-        priority: "HIGH",
-        assigneeId: agent1.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-        plannedWeek: currentWeekStart,
-        isPlanned: true,
-        kanbanStatus: "TODO",
-        estimatedDuration: 30,
-      },
-      {
-        title: "Demo for TechStart - Product Features",
-        description: "Show product capabilities",
-        status: "TODO",
-        priority: "MEDIUM",
-        assigneeId: agent2.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-        plannedWeek: currentWeekStart,
-        isPlanned: true,
-        kanbanStatus: "TODO",
-        estimatedDuration: 45,
-      },
-      {
-        title: "Follow up with GlobalTech",
-        description: "Check on proposal status",
-        status: "IN_PROGRESS",
-        priority: "HIGH",
-        assigneeId: agent1.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-        plannedWeek: currentWeekStart,
-        isPlanned: true,
-        kanbanStatus: "IN_PROGRESS",
-        estimatedDuration: 20,
-        actualStartDate: new Date(),
-      },
-      {
-        title: "Research FinTech Leads",
-        description: "Find potential clients in financial sector",
-        status: "TODO",
-        priority: "LOW",
-        assigneeId: agent3.id,
-        createdById: salesLead.id,
-        teamId: salesTeam.id,
-        plannedWeek: currentWeekStart,
-        isPlanned: true,
-        kanbanStatus: "TODO",
-        estimatedDuration: 60,
-      },
-    ],
-  });
-
-  // Create activities
-  await prisma.activity.createMany({
-    data: [
-      {
-        type: "CALL",
-        title: "Call with Acme Corp - CEO",
-        description: "Discussed product features and pricing",
-        duration: 45,
-        userId: agent1.id,
-      },
-      {
-        type: "MEETING",
-        title: "Team sync meeting",
-        description: "Weekly team alignment",
-        duration: 60,
-        userId: agent2.id,
-      },
-      {
-        type: "EMAIL",
-        title: "Follow-up email to TechStart",
-        description: "Sent demo materials and pricing info",
-        userId: agent2.id,
-      },
-      {
-        type: "CALL",
-        title: "Discovery call with StartupXYZ",
-        description: "Initial needs assessment",
-        duration: 30,
-        userId: agent3.id,
-      },
-    ],
-  });
-
-  // Create call notes
-  await prisma.callNote.createMany({
-    data: [
-      {
-        clientName: "Robert Johnson",
-        clientCompany: "Acme Corp",
-        phoneNumber: "+1-555-0123",
-        notes:
-          "Discussed Q4 renewal. Client is happy with service but wants 15% discount. Mentioned budget constraints. Interested in new analytics feature.",
-        summary: "Renewal discussion - wants discount, interested in analytics",
-        outcome: "Follow-up scheduled",
-        followUpDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        userId: agent1.id,
-      },
-      {
-        clientName: "Lisa Chen",
-        clientCompany: "TechStart Inc",
-        phoneNumber: "+1-555-0456",
-        notes:
-          "Initial discovery call. Company has 50 employees, looking for CRM solution. Timeline: 2 months. Budget: $10k-15k annually.",
-        summary: "Discovery - 50 employees, 2 month timeline, $10-15k budget",
-        outcome: "Demo scheduled",
-        followUpDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        userId: agent2.id,
-      },
-    ],
-  });
-
-  // Create customers (100 new customers assigned to companies)
-  const customerSources = ["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"];
-  const customerStatuses = ["LEAD", "PROSPECT", "CUSTOMER", "INACTIVE"];
-  
-  const positions = [
-    "CEO", "CTO", "CFO", "VP Sales", "VP Marketing", "VP Engineering", "Head of Product", "Sales Director",
-    "Marketing Director", "Engineering Manager", "Product Manager", "Business Development Manager", "Account Manager",
-    "Sales Manager", "Marketing Manager", "Project Manager", "Technical Lead", "Software Architect", "DevOps Engineer",
-    "Data Scientist", "UX Designer", "Business Analyst", "Operations Manager", "Finance Manager", "HR Manager",
-    "Chief Innovation Officer", "Head of Strategy", "Regional Sales Manager", "Key Account Manager", "Solution Architect",
-    "Product Owner", "Scrum Master", "Quality Assurance Manager", "Customer Success Manager", "Partnership Manager"
+  // Companies (10)
+  const baseCompanies = [
+    { name: "Siemens AG", industry: "TECHNOLOGY", size: "ENTERPRISE", city: "München", country: "Deutschland" },
+    { name: "SAP SE", industry: "TECHNOLOGY", size: "ENTERPRISE", city: "Walldorf", country: "Deutschland" },
+    { name: "BMW Group", industry: "AUTOMOTIVE", size: "ENTERPRISE", city: "München", country: "Deutschland" },
+    { name: "CloudScale GmbH", industry: "TECHNOLOGY", size: "SMALL", city: "Hamburg", country: "Deutschland" },
+    { name: "GreenEnergy Solutions", industry: "ENERGY", size: "MEDIUM", city: "Hamburg", country: "Deutschland" },
+    { name: "MedTech Innovations", industry: "HEALTHCARE", size: "SMALL", city: "München", country: "Deutschland" },
+    { name: "FinTech Dynamics", industry: "FINANCE", size: "STARTUP", city: "Frankfurt", country: "Deutschland" },
+    { name: "AutoParts Manufacturing", industry: "MANUFACTURING", size: "MEDIUM", city: "Stuttgart", country: "Deutschland" },
+    { name: "EduTech Solutions", industry: "EDUCATION", size: "SMALL", city: "Köln", country: "Deutschland" },
+    { name: "RetailTech Pro", industry: "RETAIL", size: "MEDIUM", city: "Düsseldorf", country: "Deutschland" },
   ];
 
-  const firstNames = [
-    "Alexander", "Benjamin", "Christian", "Daniel", "Erik", "Florian", "Gabriel", "Henrik", "Igor", "Jakob",
-    "Klaus", "Lukas", "Markus", "Niklas", "Oliver", "Patrick", "Quentin", "Robert", "Sebastian", "Thomas",
-    "Ulrich", "Vincent", "Wolfgang", "Xavier", "Yannick", "Zacharias", "Anna", "Barbara", "Claudia", "Diana",
-    "Elena", "Franziska", "Gabriele", "Helena", "Isabella", "Julia", "Katharina", "Laura", "Maria", "Nina",
-    "Olivia", "Patricia", "Rachel", "Sandra", "Tanja", "Ulrike", "Veronika", "Wendy", "Xenia", "Yvonne", "Zoe",
-    "Michael", "Stefan", "Andreas", "Martin", "Jürgen", "Hans", "Peter", "Klaus", "Wolfgang", "Josef",
-    "Franz", "Anton", "Johann", "Karl", "Josef", "Franz", "Anton", "Johann", "Karl", "Josef",
-    "Sabine", "Monika", "Petra", "Birgit", "Andrea", "Susanne", "Ingrid", "Ursula", "Elisabeth", "Gisela"
-  ];
+  const companies = await Promise.all(
+    baseCompanies.map((c, i) =>
+      prisma.company.create({
+        data: {
+          ...c,
+          revenue: randomInt(1_000_000, 1_000_000_000),
+          employees: randomInt(50, 5000),
+          website: `https://www.${c.name.toLowerCase().replace(/[^a-z]/g, "")}.com`,
+          phone: `+49 ${randomInt(100, 999)} ${randomInt(1000, 9999)}`,
+          address: `${c.city}-Straße ${i + 1}`,
+          status: "ACTIVE",
+          foundedYear: randomInt(1970, 2022),
+          assignedTo: pickAgent(),
+          createdBy: lead.id,
+        },
+      })
+    )
+  );
 
-  const lastNames = [
-    "Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann",
-    "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann",
-    "Braun", "Krüger", "Hofmann", "Lange", "Schmitt", "Werner", "Schmitz", "Krause", "Meier", "Lehmann",
-    "Schmid", "Schulze", "Maier", "Köhler", "Herrmann", "König", "Walter", "Mayer", "Huber", "Kaiser",
-    "Fuchs", "Peters", "Lang", "Scholz", "Möller", "Weiß", "Jung", "Hahn", "Schubert", "Schwarz",
-    "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Braun", "Krüger", "Hofmann"
-  ];
+  // Customers (100 = 10 pro Company), verteilt über 12 Monate
+  const first = ["Anna","Ben","Chris","Diana","Erik","Flora","Gerd","Helen","Ivan","Julia","Kai","Lena","Marc","Nina","Olaf","Paula","Rico","Sara","Timo","Uwe"];
+  const last = ["Müller","Schmidt","Fischer","Weber","Wagner","Becker","Schulz","Hoffmann","Klein","Wolf","Schäfer","Koch","Bauer","Richter","Schröder","Neumann"];
+  const positions = ["CEO","CTO","VP Sales","Director","Manager"];
+  const totalCustomers = 100;
 
-  // Get all companies for assignment
-  const allCompanies = await prisma.company.findMany();
-  const companyIds = allCompanies.map(c => c.id);
-  
-  console.log(`Found ${allCompanies.length} companies for customer assignment`);
-  console.log(`Company IDs: ${companyIds.slice(0, 3).join(', ')}...`);
-
-  const customers = [];
-  
-  for (let i = 0; i < 100; i++) {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const position = positions[Math.floor(Math.random() * positions.length)];
-    const source = customerSources[Math.floor(Math.random() * customerSources.length)];
-    
-    // Weighted status distribution (more customers than leads)
-    const statusWeights = [0.15, 0.25, 0.50, 0.10]; // LEAD, PROSPECT, CUSTOMER, INACTIVE
-    const random = Math.random();
-    let status = "CUSTOMER";
-    if (random < statusWeights[0]) status = "LEAD";
-    else if (random < statusWeights[0] + statusWeights[1]) status = "PROSPECT";
-    else if (random < statusWeights[0] + statusWeights[1] + statusWeights[2]) status = "CUSTOMER";
-    else status = "INACTIVE";
-    
-    const assignedUser = Math.random() > 0.2 ? [agent1.id, agent2.id, agent3.id][Math.floor(Math.random() * 3)] : null;
-    
-    // Value based on status and position
-    let value = null;
-    if (status === "CUSTOMER" || status === "PROSPECT") {
-      const baseValue = position.includes("CEO") || position.includes("CFO") ? 100000 : 
-                       position.includes("Director") || position.includes("VP") ? 75000 :
-                       position.includes("Manager") ? 50000 : 25000;
-      value = Math.floor(Math.random() * baseValue * 2) + baseValue;
+  const customers = [] as Array<Awaited<ReturnType<typeof prisma.customer.create>>>;
+  for (let i = 0; i < companies.length; i++) {
+    const company = companies[i];
+    for (let j = 0; j < 10; j++) {
+      const idx = i * 10 + j;
+      const createdAt = dateInPastMonthsBucket(idx, totalCustomers);
+      const fn = rand(first), ln = rand(last);
+      customers.push(await prisma.customer.create({
+        data: {
+          name: `${fn} ${ln}`,
+          email: `${fn.toLowerCase()}.${ln.toLowerCase()}@${company.name.toLowerCase().replace(/[^a-z]/g,"")}.com`,
+          phone: `+49 ${randomInt(100,999)} ${randomInt(1_000_000,9_999_999)}`,
+          company: company.name,
+          position: rand(positions),
+          status: Math.random() < 0.6 ? "CUSTOMER" : "PROSPECT",
+          source: rand(["WEBSITE","REFERRAL","COLD_CALL","SOCIAL_MEDIA"]),
+          value: randomInt(10_000, 150_000),
+          notes: Math.random() < 0.5 ? "Interested in enterprise plan" : null,
+          assignedTo: pickAgent(),
+          createdBy: lead.id,
+          companyId: company.id,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      }));
     }
-    
-    // Assign to random company
-    const assignedCompanyId = companyIds[Math.floor(Math.random() * companyIds.length)];
-    const assignedCompany = allCompanies.find(c => c.id === assignedCompanyId);
-    
-    if (i < 3) { // Debug first 3 customers
-      console.log(`Customer ${i}: assignedCompanyId=${assignedCompanyId}, assignedCompany=${assignedCompany?.name}`);
-    }
+  }
 
-    const notes = [
-      `Interested in ${Math.random() > 0.5 ? 'enterprise' : 'standard'} solution.`,
-      `Budget ${Math.random() > 0.5 ? 'approved' : 'pending approval'}.`,
-      `Decision maker: ${Math.random() > 0.5 ? 'Yes' : 'No'}.`,
-      `Timeline: ${Math.random() > 0.5 ? 'Q1 2024' : 'Q2 2024'}.`,
-      `Priority: ${Math.random() > 0.5 ? 'High' : 'Medium'}.`,
-      `Previous customer: ${Math.random() > 0.3 ? 'Yes' : 'No'}.`,
-      `Competition: ${Math.random() > 0.5 ? 'None' : 'Multiple vendors'}.`,
-      `Technical requirements: ${Math.random() > 0.5 ? 'Standard' : 'Custom'}.`
-    ].filter(() => Math.random() > 0.5).join(" ");
+  // Deals (120), über 12 Monate
+  const dealNames = ["CRM Implementation","Cloud Migration","Data Platform","Security Audit","ERP Upgrade","E‑commerce","DevOps Consulting"];
+  const stages = ["PROSPECTING","QUALIFICATION","PROPOSAL","NEGOTIATION","CLOSED_WON","CLOSED_LOST"];
+  const totalDeals = 120;
 
-    customers.push({
-      name: `${firstName} ${lastName}`,
-      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${assignedCompany?.name.toLowerCase().replace(/[^a-z]/g, '') || 'company'}.com`,
-      phone: `+49 ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 9000) + 1000}${Math.floor(Math.random() * 9000) + 1000}`,
-      company: assignedCompany?.name || "Unknown Company",
-      position: position,
-      status: status,
-      source: source,
-      value: value,
-      notes: notes || null,
-      assignedTo: assignedUser,
-      createdBy: [salesLead.id, agent1.id, agent2.id, agent3.id][Math.floor(Math.random() * 4)],
-      companyId: assignedCompanyId,
+  const deals = [] as Array<Awaited<ReturnType<typeof prisma.deal.create>>>;
+  for (let i = 0; i < totalDeals; i++) {
+    const company = rand(companies);
+    const companyCustomers = customers.filter(c => c.companyId === company.id);
+    const customer = companyCustomers.length ? rand(companyCustomers) : null;
+    const stage = rand(stages);
+    const createdAt = dateInPastMonthsBucket(i, totalDeals);
+    const expectedCloseDate = new Date(createdAt.getTime() + randomInt(7, 120) * 24 * 60 * 60 * 1000);
+
+    deals.push(await prisma.deal.create({
+      data: {
+        name: rand(dealNames),
+        description: customer ? `Deal with ${customer.name} at ${company.name}` : `Deal at ${company.name}`,
+        value: randomInt(20_000, 420_000),
+        probability: randomInt(5, 100),
+        stage,
+        expectedCloseDate,
+        actualCloseDate: ["CLOSED_WON","CLOSED_LOST"].includes(stage) ? expectedCloseDate : null,
+        source: rand(["WEBSITE","REFERRAL","PARTNER","OUTBOUND"]),
+        ownerId: pickAgent(),
+        createdBy: lead.id,
+        customerId: customer ? customer.id : null,
+        companyId: company.id,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    }));
+  }
+
+  // Deal Notes (80)
+  for (let i = 0; i < Math.min(80, deals.length); i++) {
+    const createdAt = dateInPastMonthsBucket(i, 80);
+    await prisma.dealNote.create({
+      data: {
+        dealId: deals[i].id,
+        content: "Qualification done. Next step: product demo.",
+        userId: pickAgent(),
+        createdAt,
+      },
     });
   }
 
-  await prisma.customer.createMany({
-    data: customers,
+  // Activities (100)
+  for (let i = 0; i < 100; i++) {
+    const c = rand(customers);
+    const createdAt = dateInPastMonthsBucket(i, 100);
+    await prisma.activity.create({
+      data: {
+        type: "CALL",
+        title: `Intro call with ${c.name}`,
+        description: `Discussed needs at ${c.company}`,
+        duration: randomInt(15, 60),
+        userId: pickAgent(),
+        customerId: c.id,
+        companyId: c.companyId!,
+        plannedWeek: null,
+        actualDate: createdAt,
+        kanbanStatus: "COMPLETED",
+        activityType: "CALL",
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+  }
+
+  // Tasks (100)
+  for (let i = 0; i < 100; i++) {
+    const c = rand(customers);
+    const createdAt = dateInPastMonthsBucket(i, 100);
+    const dueDate = new Date(createdAt.getTime() + randomInt(1, 21) * 24 * 60 * 60 * 1000);
+    const completed = Math.random() < 0.5;
+    await prisma.task.create({
+      data: {
+        title: `Follow up ${c.name}`,
+        description: `Send proposal to ${c.company}`,
+        status: completed ? "COMPLETED" : rand(["TODO","IN_PROGRESS"]),
+        priority: rand(["LOW","MEDIUM","HIGH"]),
+        dueDate,
+        actualEndDate: completed ? new Date(createdAt.getTime() + randomInt(1, 14) * 24 * 60 * 60 * 1000) : null,
+        assigneeId: pickAgent(),
+        createdById: lead.id,
+        teamId: team.id,
+        customerId: c.id,
+        companyId: c.companyId!,
+        estimatedDuration: randomInt(20, 120),
+        actualDuration: completed ? randomInt(20, 120) : null,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+  }
+
+  // Call Notes (100)
+  for (let i = 0; i < 100; i++) {
+    const c = rand(customers);
+    const createdAt = dateInPastMonthsBucket(i, 100);
+    await prisma.callNote.create({
+      data: {
+        clientName: c.name,
+        clientCompany: c.company ?? "",
+        phoneNumber: `+49 ${randomInt(100,999)} ${randomInt(1_000_000,9_999_999)}`,
+        notes: "Asked for pricing and implementation timeline.",
+        summary: "Discovery call",
+        outcome: rand(["SUCCESSFUL","NO_ANSWER","CALLBACK_REQUESTED"]),
+        followUpDate: new Date(createdAt.getTime() + randomInt(2, 10) * 24 * 60 * 60 * 1000),
+        userId: pickAgent(),
+        customerId: c.id,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+  }
+
+  // Targets je User (aktueller Monat/Jahr)
+  await prisma.target.createMany({
+    data: users.map(u => ({
+      userId: u.id,
+      period: "MONTHLY",
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      targetValue: u.role === "SALES_LEAD" ? 600000 : 300000,
+      actualValue: 0,
+    })),
   });
 
-  console.log(`✅ Created ${customers.length} customers assigned to companies`);
-
-  // Create companies
-  const industries = [
-    "TECHNOLOGY", "FINANCE", "HEALTHCARE", "MANUFACTURING", "RETAIL", 
-    "EDUCATION", "ENERGY", "AUTOMOTIVE", "AEROSPACE", "CONSTRUCTION",
-    "FOOD_BEVERAGE", "PHARMACEUTICALS", "TELECOMMUNICATIONS", "MEDIA", "TRANSPORTATION"
-  ];
-  
-  const companySizes = ["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"];
-  const companyStatuses = ["ACTIVE", "PROSPECT", "PARTNER", "INACTIVE"];
-  
-  const cities = [
-    "München", "Berlin", "Hamburg", "Köln", "Frankfurt", "Stuttgart", "Düsseldorf", 
-    "Dortmund", "Essen", "Leipzig", "Bremen", "Dresden", "Hannover", "Nürnberg", 
-    "Duisburg", "Bochum", "Wuppertal", "Bielefeld", "Bonn", "Münster"
-  ];
-
-  const companies = [
-    {
-      name: "Siemens AG",
-      industry: "TECHNOLOGY",
-      size: "ENTERPRISE",
-      revenue: 62000000000,
-      employees: 303000,
-      website: "https://www.siemens.com",
-      address: "Werner-von-Siemens-Straße 1",
-      city: "München",
-      country: "Deutschland",
-      phone: "+49 89 636-00",
-      email: "info@siemens.com",
-      description: "Multinational technology company focused on industry, infrastructure, transport, and healthcare.",
-      status: "ACTIVE",
-      foundedYear: 1847,
-      assignedTo: agent1.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "SAP SE",
-      industry: "TECHNOLOGY",
-      size: "ENTERPRISE",
-      revenue: 30872000000,
-      employees: 107400,
-      website: "https://www.sap.com",
-      address: "Dietmar-Hopp-Allee 16",
-      city: "Walldorf",
-      country: "Deutschland",
-      phone: "+49 6227 7-47474",
-      email: "info@sap.com",
-      description: "Enterprise application software company providing business software to manage business operations and customer relations.",
-      status: "ACTIVE",
-      foundedYear: 1972,
-      assignedTo: agent2.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "BMW Group",
-      industry: "AUTOMOTIVE",
-      size: "ENTERPRISE",
-      revenue: 142610000000,
-      employees: 133778,
-      website: "https://www.bmwgroup.com",
-      address: "Petuelring 130",
-      city: "München",
-      country: "Deutschland",
-      phone: "+49 89 382-0",
-      email: "info@bmwgroup.com",
-      description: "Multinational corporation which produces luxury vehicles and motorcycles.",
-      status: "ACTIVE",
-      foundedYear: 1916,
-      assignedTo: agent3.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "Deutsche Bank AG",
-      industry: "FINANCE",
-      size: "ENTERPRISE",
-      revenue: 25300000000,
-      employees: 85000,
-      website: "https://www.db.com",
-      address: "Taunusanlage 12",
-      city: "Frankfurt",
-      country: "Deutschland",
-      phone: "+49 69 910-00",
-      email: "info@db.com",
-      description: "German multinational investment bank and financial services company.",
-      status: "PROSPECT",
-      foundedYear: 1870,
-      assignedTo: agent1.id,
-      createdBy: agent2.id,
-    },
-    {
-      name: "Adidas AG",
-      industry: "RETAIL",
-      size: "LARGE",
-      revenue: 21234000000,
-      employees: 60017,
-      website: "https://www.adidas.com",
-      address: "Adi-Dassler-Straße 1",
-      city: "Herzogenaurach",
-      country: "Deutschland",
-      phone: "+49 9132 84-0",
-      email: "info@adidas.com",
-      description: "German multinational corporation, founded and headquartered in Herzogenaurach, Germany, that designs and manufactures shoes, clothing and accessories.",
-      status: "ACTIVE",
-      foundedYear: 1949,
-      assignedTo: agent2.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "Bayer AG",
-      industry: "PHARMACEUTICALS",
-      size: "ENTERPRISE",
-      revenue: 47360000000,
-      employees: 99637,
-      website: "https://www.bayer.com",
-      address: "Kaiser-Wilhelm-Allee 1",
-      city: "Leverkusen",
-      country: "Deutschland",
-      phone: "+49 214 30-1",
-      email: "info@bayer.com",
-      description: "German multinational pharmaceutical and biotechnology company.",
-      status: "ACTIVE",
-      foundedYear: 1863,
-      assignedTo: agent3.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "Continental AG",
-      industry: "AUTOMOTIVE",
-      size: "LARGE",
-      revenue: 33765000000,
-      employees: 244226,
-      website: "https://www.continental.com",
-      address: "Vahrenwalder Straße 9",
-      city: "Hannover",
-      country: "Deutschland",
-      phone: "+49 511 938-0",
-      email: "info@continental.com",
-      description: "German multinational automotive parts manufacturing company.",
-      status: "PROSPECT",
-      foundedYear: 1871,
-      assignedTo: agent1.id,
-      createdBy: agent2.id,
-    },
-    {
-      name: "Merck KGaA",
-      industry: "PHARMACEUTICALS",
-      size: "LARGE",
-      revenue: 19723000000,
-      employees: 57000,
-      website: "https://www.merckgroup.com",
-      address: "Frankfurter Straße 250",
-      city: "Darmstadt",
-      country: "Deutschland",
-      phone: "+49 6151 72-0",
-      email: "info@merckgroup.com",
-      description: "German multinational science and technology company.",
-      status: "ACTIVE",
-      foundedYear: 1668,
-      assignedTo: agent2.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "Henkel AG & Co. KGaA",
-      industry: "MANUFACTURING",
-      size: "LARGE",
-      revenue: 22241000000,
-      employees: 52000,
-      website: "https://www.henkel.com",
-      address: "Henkelstraße 67",
-      city: "Düsseldorf",
-      country: "Deutschland",
-      phone: "+49 211 797-0",
-      email: "info@henkel.com",
-      description: "German multinational chemical and consumer goods company.",
-      status: "ACTIVE",
-      foundedYear: 1876,
-      assignedTo: agent3.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "BASF SE",
-      industry: "MANUFACTURING",
-      size: "ENTERPRISE",
-      revenue: 78598000000,
-      employees: 110000,
-      website: "https://www.basf.com",
-      address: "Carl-Bosch-Straße 38",
-      city: "Ludwigshafen",
-      country: "Deutschland",
-      phone: "+49 621 60-0",
-      email: "info@basf.com",
-      description: "German multinational chemical company and the largest chemical producer in the world.",
-      status: "ACTIVE",
-      foundedYear: 1865,
-      assignedTo: agent1.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "TechStart Innovations",
-      industry: "TECHNOLOGY",
-      size: "STARTUP",
-      revenue: 2500000,
-      employees: 25,
-      website: "https://www.techstart-innovations.com",
-      address: "Startup-Allee 15",
-      city: "Berlin",
-      country: "Deutschland",
-      phone: "+49 30 12345678",
-      email: "hello@techstart-innovations.com",
-      description: "Innovative startup developing AI-powered business solutions for SMEs.",
-      status: "PROSPECT",
-      foundedYear: 2020,
-      assignedTo: agent2.id,
-      createdBy: agent1.id,
-    },
-    {
-      name: "GreenEnergy Solutions",
-      industry: "ENERGY",
-      size: "MEDIUM",
-      revenue: 45000000,
-      employees: 180,
-      website: "https://www.greenenergy-solutions.de",
-      address: "Umweltstraße 42",
-      city: "Hamburg",
-      country: "Deutschland",
-      phone: "+49 40 98765432",
-      email: "info@greenenergy-solutions.de",
-      description: "Renewable energy company specializing in solar and wind power solutions.",
-      status: "ACTIVE",
-      foundedYear: 2015,
-      assignedTo: agent3.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "MedTech Innovations",
-      industry: "HEALTHCARE",
-      size: "SMALL",
-      revenue: 12000000,
-      employees: 65,
-      website: "https://www.medtech-innovations.de",
-      address: "Gesundheitsweg 8",
-      city: "München",
-      country: "Deutschland",
-      phone: "+49 89 87654321",
-      email: "contact@medtech-innovations.de",
-      description: "Medical technology company developing innovative diagnostic devices.",
-      status: "PROSPECT",
-      foundedYear: 2018,
-      assignedTo: agent1.id,
-      createdBy: agent2.id,
-    },
-    {
-      name: "FinTech Dynamics",
-      industry: "FINANCE",
-      size: "STARTUP",
-      revenue: 5000000,
-      employees: 35,
-      website: "https://www.fintech-dynamics.com",
-      address: "Digitalstraße 123",
-      city: "Frankfurt",
-      country: "Deutschland",
-      phone: "+49 69 11223344",
-      email: "info@fintech-dynamics.com",
-      description: "Fintech startup providing blockchain-based payment solutions.",
-      status: "ACTIVE",
-      foundedYear: 2021,
-      assignedTo: agent2.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "AutoParts Manufacturing",
-      industry: "MANUFACTURING",
-      size: "MEDIUM",
-      revenue: 85000000,
-      employees: 320,
-      website: "https://www.autoparts-mfg.de",
-      address: "Industriestraße 67",
-      city: "Stuttgart",
-      country: "Deutschland",
-      phone: "+49 711 55667788",
-      email: "info@autoparts-mfg.de",
-      description: "Specialized manufacturer of high-quality automotive components.",
-      status: "ACTIVE",
-      foundedYear: 1995,
-      assignedTo: agent3.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "EduTech Solutions",
-      industry: "EDUCATION",
-      size: "SMALL",
-      revenue: 18000000,
-      employees: 85,
-      website: "https://www.edutech-solutions.de",
-      address: "Bildungsweg 25",
-      city: "Köln",
-      country: "Deutschland",
-      phone: "+49 221 99887766",
-      email: "hello@edutech-solutions.de",
-      description: "Educational technology company developing e-learning platforms.",
-      status: "PROSPECT",
-      foundedYear: 2017,
-      assignedTo: agent1.id,
-      createdBy: agent2.id,
-    },
-    {
-      name: "RetailTech Pro",
-      industry: "RETAIL",
-      size: "MEDIUM",
-      revenue: 32000000,
-      employees: 150,
-      website: "https://www.retailtech-pro.de",
-      address: "Handelsstraße 89",
-      city: "Düsseldorf",
-      country: "Deutschland",
-      phone: "+49 211 44556677",
-      email: "info@retailtech-pro.de",
-      description: "Retail technology solutions provider specializing in POS systems.",
-      status: "ACTIVE",
-      foundedYear: 2012,
-      assignedTo: agent2.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "CloudScale GmbH",
-      industry: "TECHNOLOGY",
-      size: "STARTUP",
-      revenue: 8000000,
-      employees: 45,
-      website: "https://www.cloudscale.de",
-      address: "Cloud-Allee 12",
-      city: "Hamburg",
-      country: "Deutschland",
-      phone: "+49 40 22334455",
-      email: "contact@cloudscale.de",
-      description: "Cloud infrastructure and scaling solutions for growing businesses.",
-      status: "PROSPECT",
-      foundedYear: 2019,
-      assignedTo: agent3.id,
-      createdBy: agent1.id,
-    },
-    {
-      name: "BioPharma Research",
-      industry: "PHARMACEUTICALS",
-      size: "MEDIUM",
-      revenue: 65000000,
-      employees: 280,
-      website: "https://www.biopharma-research.de",
-      address: "Forschungsstraße 156",
-      city: "München",
-      country: "Deutschland",
-      phone: "+49 89 33445566",
-      email: "research@biopharma-research.de",
-      description: "Biopharmaceutical research company focusing on cancer treatments.",
-      status: "ACTIVE",
-      foundedYear: 2010,
-      assignedTo: agent1.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "SmartCity Technologies",
-      industry: "TECHNOLOGY",
-      size: "SMALL",
-      revenue: 15000000,
-      employees: 75,
-      website: "https://www.smartcity-tech.de",
-      address: "Zukunftstraße 78",
-      city: "Berlin",
-      country: "Deutschland",
-      phone: "+49 30 66778899",
-      email: "info@smartcity-tech.de",
-      description: "Smart city technology solutions for urban infrastructure.",
-      status: "PROSPECT",
-      foundedYear: 2016,
-      assignedTo: agent2.id,
-      createdBy: agent3.id,
-    },
-    {
-      name: "AeroSpace Dynamics",
-      industry: "AEROSPACE",
-      size: "LARGE",
-      revenue: 120000000,
-      employees: 450,
-      website: "https://www.aerospace-dynamics.de",
-      address: "Flugplatzstraße 234",
-      city: "Bremen",
-      country: "Deutschland",
-      phone: "+49 421 77889900",
-      email: "info@aerospace-dynamics.de",
-      description: "Aerospace components manufacturer for commercial and military aircraft.",
-      status: "ACTIVE",
-      foundedYear: 1985,
-      assignedTo: agent3.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "FoodTech Innovations",
-      industry: "FOOD_BEVERAGE",
-      size: "SMALL",
-      revenue: 22000000,
-      employees: 95,
-      website: "https://www.foodtech-innovations.de",
-      address: "Genussweg 45",
-      city: "Stuttgart",
-      country: "Deutschland",
-      phone: "+49 711 88990011",
-      email: "innovation@foodtech-innovations.de",
-      description: "Food technology company developing sustainable packaging solutions.",
-      status: "PROSPECT",
-      foundedYear: 2014,
-      assignedTo: agent1.id,
-      createdBy: agent2.id,
-    },
-    {
-      name: "ConstructionMax",
-      industry: "CONSTRUCTION",
-      size: "MEDIUM",
-      revenue: 95000000,
-      employees: 380,
-      website: "https://www.constructionmax.de",
-      address: "Bauweg 167",
-      city: "Köln",
-      country: "Deutschland",
-      phone: "+49 221 99001122",
-      email: "bau@constructionmax.de",
-      description: "Construction company specializing in sustainable building solutions.",
-      status: "ACTIVE",
-      foundedYear: 2005,
-      assignedTo: agent2.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "Telecom Solutions",
-      industry: "TELECOMMUNICATIONS",
-      size: "LARGE",
-      revenue: 180000000,
-      employees: 650,
-      website: "https://www.telecom-solutions.de",
-      address: "Kommunikationsstraße 89",
-      city: "Frankfurt",
-      country: "Deutschland",
-      phone: "+49 69 10111213",
-      email: "solutions@telecom-solutions.de",
-      description: "Telecommunications infrastructure and services provider.",
-      status: "ACTIVE",
-      foundedYear: 1998,
-      assignedTo: agent3.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "MediaTech Group",
-      industry: "MEDIA",
-      size: "MEDIUM",
-      revenue: 45000000,
-      employees: 200,
-      website: "https://www.mediatech-group.de",
-      address: "Medienstraße 123",
-      city: "Hamburg",
-      country: "Deutschland",
-      phone: "+49 40 12131415",
-      email: "media@mediatech-group.de",
-      description: "Digital media and content creation technology company.",
-      status: "PROSPECT",
-      foundedYear: 2011,
-      assignedTo: agent1.id,
-      createdBy: agent2.id,
-    },
-    {
-      name: "LogiTech Transport",
-      industry: "TRANSPORTATION",
-      size: "LARGE",
-      revenue: 150000000,
-      employees: 520,
-      website: "https://www.logitech-transport.de",
-      address: "Transportstraße 456",
-      city: "Düsseldorf",
-      country: "Deutschland",
-      phone: "+49 211 16171819",
-      email: "logistics@logitech-transport.de",
-      description: "Logistics and transportation technology solutions provider.",
-      status: "ACTIVE",
-      foundedYear: 2000,
-      assignedTo: agent2.id,
-      createdBy: salesLead.id,
-    },
-    {
-      name: "CyberSecurity Pro",
-      industry: "TECHNOLOGY",
-      size: "SMALL",
-      revenue: 28000000,
-      employees: 120,
-      website: "https://www.cybersecurity-pro.de",
-      address: "Sicherheitsweg 78",
-      city: "München",
-      country: "Deutschland",
-      phone: "+49 89 20212223",
-      email: "security@cybersecurity-pro.de",
-      description: "Cybersecurity solutions provider for enterprise clients.",
-      status: "PROSPECT",
-      foundedYear: 2013,
-      assignedTo: agent3.id,
-      createdBy: agent1.id,
-    },
-    {
-      name: "DataAnalytics Inc",
-      industry: "TECHNOLOGY",
-      size: "STARTUP",
-      revenue: 12000000,
-      employees: 55,
-      website: "https://www.dataanalytics-inc.de",
-      address: "Datenstraße 234",
-      city: "Berlin",
-      country: "Deutschland",
-      phone: "+49 30 25262728",
-      email: "data@dataanalytics-inc.de",
-      description: "Big data analytics and machine learning solutions startup.",
-      status: "ACTIVE",
-      foundedYear: 2020,
-      assignedTo: agent1.id,
-      createdBy: salesLead.id,
-    }
-  ];
-
-  await prisma.company.createMany({
-    data: companies,
-  });
-
-  console.log(`✅ Created ${companies.length} companies`);
-
-  console.log("✅ Database seeded successfully!");
+  console.log("✅ Seed complete.");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+  .then(async () => { await prisma.$disconnect(); })
+  .catch(async (e) => { console.error(e); await prisma.$disconnect(); process.exit(1); });
 

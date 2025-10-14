@@ -8,16 +8,23 @@ interface User {
   name: string;
 }
 
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
 export default function CallNoteCreateForm({ users }: { users: User[] }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
+    setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -39,8 +46,20 @@ export default function CallNoteCreateForm({ users }: { users: User[] }) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create call note");
+        const errorData = await response.json();
+        
+        if (errorData.details) {
+          // Handle Zod validation errors
+          const errors: Record<string, string> = {};
+          errorData.details.forEach((err: ValidationError) => {
+            errors[err.field] = err.message;
+          });
+          setFieldErrors(errors);
+          setError("Please fix the errors below");
+        } else {
+          setError(errorData.error || "Failed to create call note");
+        }
+        return;
       }
 
       const callNote = await response.json();
@@ -48,9 +67,13 @@ export default function CallNoteCreateForm({ users }: { users: User[] }) {
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create call note");
+    } finally {
       setIsSubmitting(false);
     }
   };
+
+  const getFieldError = (fieldName: string) => fieldErrors[fieldName];
+  const hasFieldError = (fieldName: string) => !!fieldErrors[fieldName];
 
   const generateAISummary = async () => {
     setIsGeneratingAI(true);
@@ -92,8 +115,15 @@ export default function CallNoteCreateForm({ users }: { users: User[] }) {
             id="clientName"
             name="clientName"
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('clientName') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
           />
+          {hasFieldError('clientName') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('clientName')}</p>
+          )}
         </div>
 
         <div>
@@ -152,9 +182,16 @@ export default function CallNoteCreateForm({ users }: { users: User[] }) {
           name="notes"
           required
           rows={6}
-          className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+          className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+            hasFieldError('notes') 
+              ? 'border-red-300 bg-red-50' 
+              : 'border-gray-300'
+          }`}
           placeholder="Detailed notes from the call..."
         />
+        {hasFieldError('notes') && (
+          <p className="mt-1 text-sm text-red-600">{getFieldError('notes')}</p>
+        )}
       </div>
 
       <div>

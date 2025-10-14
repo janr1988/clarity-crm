@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     const company = await prisma.company.create({
       data: {
         ...validatedData,
+        assignedTo: validatedData.assignedTo || null, // Convert undefined to null
         createdBy: session.user.id, // Set the creator to the logged-in user
       },
     });
@@ -74,7 +75,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { 
+          error: "Validation failed", 
+          details: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        },
         { status: 400 }
       );
     }

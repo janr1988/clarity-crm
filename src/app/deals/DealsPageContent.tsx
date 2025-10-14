@@ -9,7 +9,7 @@ import TimeFilterComponent from "@/components/TimeFilter";
 
 interface Deal {
   id: string;
-  title: string | null;
+  name: string;
   value: number;
   stage: string;
   probability: number;
@@ -27,7 +27,7 @@ interface Deal {
   company: {
     id: string;
     name: string;
-    industry: string;
+    industry: string | null;
   } | null;
 }
 
@@ -58,6 +58,7 @@ export default function DealsPageContent() {
   const [data, setData] = useState<DealsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [justCreated, setJustCreated] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDeals() {
@@ -74,6 +75,17 @@ export default function DealsPageContent() {
 
     fetchDeals();
   }, [timeFilter]);
+
+  useEffect(() => {
+    // Show success notification if redirected with created=true
+    const created = searchParams.get('created');
+    const name = searchParams.get('name');
+    if (created === 'true') {
+      setJustCreated(name || 'Deal');
+      const timer = setTimeout(() => setJustCreated(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   if (loading) {
     return (
@@ -142,6 +154,11 @@ export default function DealsPageContent() {
 
   return (
     <div className="p-6">
+      {justCreated && (
+        <div className="mb-4 rounded border border-green-200 bg-green-50 text-green-800 px-4 py-3">
+          {justCreated} wurde angelegt.
+        </div>
+      )}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Deals & Opportunities</h1>
@@ -223,7 +240,7 @@ export default function DealsPageContent() {
                       href={`/deals/${deal.id}`}
                       className="font-medium text-gray-900 hover:text-primary transition-colors"
                     >
-                      {deal.title || 'Untitled Deal'}
+                      {deal.name || 'Untitled Deal'}
                     </Link>
                     {deal.customer && (
                       <p className="text-sm text-gray-600 mt-1">{deal.customer.name}</p>
@@ -326,7 +343,7 @@ export default function DealsPageContent() {
                       href={`/deals/${deal.id}`}
                       className="font-medium text-gray-900 hover:text-primary transition-colors text-sm"
                     >
-                      {deal.title && deal.title.length > 20 ? `${deal.title.substring(0, 20)}...` : deal.title || 'Untitled Deal'}
+                      {deal.name && deal.name.length > 20 ? `${deal.name.substring(0, 20)}...` : deal.name || 'Untitled Deal'}
                     </Link>
                     {deal.customer && (
                       <p className="text-xs text-gray-600 mt-1">{deal.customer.name}</p>
@@ -400,7 +417,7 @@ export default function DealsPageContent() {
                     href={`/deals/${deal.id}`}
                     className="font-medium text-gray-900 hover:text-primary transition-colors"
                   >
-                    {deal.title}
+                    {deal.name}
                   </Link>
                   {deal.customer && (
                     <p className="text-sm text-gray-600 mt-1">{deal.customer.name}</p>

@@ -120,9 +120,9 @@ export default function CompanyCreateForm() {
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
           required
         />
-        {errors?.find((e) => e.path[0] === "name") && (
+        {errors?.find((e) => e.path && e.path[0] === "name") && (
           <p className="mt-2 text-sm text-red-600">
-            {errors.find((e) => e.path[0] === "name")?.message}
+            {errors.find((e) => e.path && e.path[0] === "name")?.message}
           </p>
         )}
       </div>

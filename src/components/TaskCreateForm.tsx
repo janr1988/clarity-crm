@@ -9,15 +9,22 @@ interface User {
   email: string;
 }
 
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
 export default function TaskCreateForm({ users }: { users: User[] }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
+    setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -37,8 +44,20 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create task");
+        const errorData = await response.json();
+        
+        if (errorData.details) {
+          // Handle Zod validation errors
+          const errors: Record<string, string> = {};
+          errorData.details.forEach((err: ValidationError) => {
+            errors[err.field] = err.message;
+          });
+          setFieldErrors(errors);
+          setError("Please fix the errors below");
+        } else {
+          setError(errorData.error || "Failed to create task");
+        }
+        return;
       }
 
       const task = await response.json();
@@ -46,9 +65,13 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create task");
+    } finally {
       setIsSubmitting(false);
     }
   };
+
+  const getFieldError = (fieldName: string) => fieldErrors[fieldName];
+  const hasFieldError = (fieldName: string) => !!fieldErrors[fieldName];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -67,8 +90,15 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
           id="title"
           name="title"
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+          className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+            hasFieldError('title') 
+              ? 'border-red-300 bg-red-50' 
+              : 'border-gray-300'
+          }`}
         />
+        {hasFieldError('title') && (
+          <p className="mt-1 text-sm text-red-600">{getFieldError('title')}</p>
+        )}
       </div>
 
       <div>
@@ -79,8 +109,15 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
           id="description"
           name="description"
           rows={4}
-          className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+          className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+            hasFieldError('description') 
+              ? 'border-red-300 bg-red-50' 
+              : 'border-gray-300'
+          }`}
         />
+        {hasFieldError('description') && (
+          <p className="mt-1 text-sm text-red-600">{getFieldError('description')}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -92,13 +129,20 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
             id="status"
             name="status"
             defaultValue="TODO"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('status') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
           >
             <option value="TODO">To Do</option>
             <option value="IN_PROGRESS">In Progress</option>
             <option value="COMPLETED">Completed</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
+          {hasFieldError('status') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('status')}</p>
+          )}
         </div>
 
         <div>
@@ -109,13 +153,20 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
             id="priority"
             name="priority"
             defaultValue="MEDIUM"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('priority') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
           >
             <option value="LOW">Low</option>
             <option value="MEDIUM">Medium</option>
             <option value="HIGH">High</option>
             <option value="URGENT">Urgent</option>
           </select>
+          {hasFieldError('priority') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('priority')}</p>
+          )}
         </div>
       </div>
 
@@ -127,7 +178,11 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
           <select
             id="assigneeId"
             name="assigneeId"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('assigneeId') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
           >
             <option value="">Unassigned</option>
             {users.map((user) => (
@@ -136,6 +191,9 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
               </option>
             ))}
           </select>
+          {hasFieldError('assigneeId') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('assigneeId')}</p>
+          )}
         </div>
 
         <div>
@@ -146,8 +204,15 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
             type="datetime-local"
             id="dueDate"
             name="dueDate"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('dueDate') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
           />
+          {hasFieldError('dueDate') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('dueDate')}</p>
+          )}
         </div>
       </div>
 

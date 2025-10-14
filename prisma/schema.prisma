@@ -220,8 +220,8 @@ model Company {
 model Deal {
   id                  String    @id @default(uuid())
   name                String
-  customerId          String
-  companyId           String
+  customerId          String?
+  companyId           String?
   value               Float     // Deal value in EUR
   probability         Int       @default(50) // 0-100%
   stage               String    @default("PROSPECTING") // PROSPECTING, QUALIFICATION, PROPOSAL, NEGOTIATION, CLOSED_WON, CLOSED_LOST
@@ -242,8 +242,8 @@ model Deal {
   updatedAt           DateTime  @updatedAt
   
   // Relations
-  customer            Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  company             Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer            Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  company             Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   owner               User      @relation("DealOwner", fields: [ownerId], references: [id])
   creator             User      @relation("DealCreator", fields: [createdBy], references: [id])
   notes               DealNote[]

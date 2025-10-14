@@ -8,15 +8,22 @@ interface User {
   name: string;
 }
 
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
 export default function ActivityCreateForm({ users }: { users: User[] }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
+    setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
     const durationStr = formData.get("duration") as string;
@@ -37,17 +44,33 @@ export default function ActivityCreateForm({ users }: { users: User[] }) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create activity");
+        const errorData = await response.json();
+        
+        if (errorData.details) {
+          // Handle Zod validation errors
+          const errors: Record<string, string> = {};
+          errorData.details.forEach((err: ValidationError) => {
+            errors[err.field] = err.message;
+          });
+          setFieldErrors(errors);
+          setError("Please fix the errors below");
+        } else {
+          setError(errorData.error || "Failed to create activity");
+        }
+        return;
       }
 
       router.push("/activities");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create activity");
+    } finally {
       setIsSubmitting(false);
     }
   };
+
+  const getFieldError = (fieldName: string) => fieldErrors[fieldName];
+  const hasFieldError = (fieldName: string) => !!fieldErrors[fieldName];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -65,7 +88,11 @@ export default function ActivityCreateForm({ users }: { users: User[] }) {
           id="type"
           name="type"
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+          className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+            hasFieldError('type') 
+              ? 'border-red-300 bg-red-50' 
+              : 'border-gray-300'
+          }`}
         >
           <option value="CALL">📞 Call</option>
           <option value="MEETING">👥 Meeting</option>
@@ -73,6 +100,9 @@ export default function ActivityCreateForm({ users }: { users: User[] }) {
           <option value="NOTE">📝 Note</option>
           <option value="OTHER">📋 Other</option>
         </select>
+        {hasFieldError('type') && (
+          <p className="mt-1 text-sm text-red-600">{getFieldError('type')}</p>
+        )}
       </div>
 
       <div>
@@ -84,9 +114,16 @@ export default function ActivityCreateForm({ users }: { users: User[] }) {
           id="title"
           name="title"
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+          className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+            hasFieldError('title') 
+              ? 'border-red-300 bg-red-50' 
+              : 'border-gray-300'
+          }`}
           placeholder="e.g., Call with client about Q4 renewal"
         />
+        {hasFieldError('title') && (
+          <p className="mt-1 text-sm text-red-600">{getFieldError('title')}</p>
+        )}
       </div>
 
       <div>

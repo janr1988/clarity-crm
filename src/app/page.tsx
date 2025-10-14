@@ -2,10 +2,17 @@ import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isSalesLead } from "@/lib/authorization";
+import { redirect } from "next/navigation";
 import DashboardPageContent from "./DashboardPageContent";
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
+  
+  // Redirect to login if not authenticated
+  if (!session) {
+    redirect("/login");
+  }
+  
   const isLead = isSalesLead(session);
 
   return (
@@ -23,9 +30,9 @@ export default async function Dashboard() {
       </div>
     }>
       <DashboardPageContent 
-        userId={session?.user?.id}
+        userId={session.user.id}
         isLead={isLead}
-        userName={session?.user?.name}
+        userName={session.user.name}
       />
     </Suspense>
   );

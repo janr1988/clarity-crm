@@ -197,8 +197,23 @@ export type CreateCallNoteInput = z.infer<typeof createCallNoteSchema>;
 export type UpdateCallNoteInput = z.infer<typeof updateCallNoteSchema>;
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 export type UpdateTeamInput = z.infer<typeof updateTeamSchema>;
+// Deal validation schemas
+export const createDealSchema = z.object({
+  name: z.string().min(1, "Deal name is required").max(200, "Deal name must be less than 200 characters"),
+  description: z.string().optional(),
+  value: z.number().min(0, "Deal value must be positive"),
+  probability: z.number().min(0).max(100, "Probability must be between 0 and 100"),
+  stage: z.enum(["PROSPECTING", "LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"]),
+  expectedCloseDate: z.string().optional(),
+  source: z.string().optional(),
+  customerId: z.string().optional(),
+  companyId: z.string().optional(),
+  ownerId: z.string().optional(),
+});
+
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
 export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
+export type CreateDealInput = z.infer<typeof createDealSchema>;
 

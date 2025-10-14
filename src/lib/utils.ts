@@ -73,6 +73,10 @@ export function getActivityIcon(type: string): string {
       return "📧";
     case "NOTE":
       return "📝";
+    case "TASK":
+      return "✅";
+    case "TASK_COMPLETED":
+      return "✅";
     default:
       return "📋";
   }

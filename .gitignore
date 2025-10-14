@@ -1,3 +1,15 @@
+# Node/Next standard
+node_modules/
+.next/
+.DS_Store
+
+# Local env
+.env.local
+
+# SQLite DB and backups (do not commit data)
+prisma/dev.db
+backups/
+
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
