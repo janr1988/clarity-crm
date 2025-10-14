@@ -27,13 +27,18 @@ export default function TaskCreateForm({ users }: { users: User[] }) {
     setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
+    const rawDue = (formData.get("dueDate") as string) || "";
+    const normalizedDue = rawDue
+      ? new Date(rawDue).toISOString() // convert datetime-local to RFC3339/ISO for zod .datetime()
+      : undefined;
+
     const data = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       status: formData.get("status") as string,
       priority: formData.get("priority") as string,
       assigneeId: formData.get("assigneeId") as string || undefined,
-      dueDate: formData.get("dueDate") as string || undefined,
+      dueDate: normalizedDue,
     };
 
     try {
