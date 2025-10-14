@@ -93,26 +93,26 @@ export default function Sidebar() {
       {/* Sidebar */}
       <div className={cn(
         "bg-white border-r border-gray-200 flex flex-col h-screen transition-all duration-300 ease-in-out",
-        // Desktop: Always visible, full width
-        "lg:w-64 lg:translate-x-0 lg:static",
-        // Tablet: Collapsed to icons only
-        "md:w-20 md:translate-x-0 md:static",
-        // Mobile: Hidden by default, slide in when open
+        // Desktop: Always visible, full width (1024px+)
+        "xl:w-64 xl:translate-x-0 xl:static",
+        // Large tablets: Collapsed to icons only (1024px-1366px)
+        "lg:w-20 lg:translate-x-0 lg:static",
+        // Small tablets & mobile: Hidden by default, slide in when open (<1024px)
         "fixed z-40 w-64",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Logo Section */}
         <div className="p-6 border-b border-gray-100">
           <div className={cn(
             "flex items-center transition-all duration-300",
-            "md:justify-center lg:justify-start"
+            "lg:justify-center xl:justify-start"
           )}>
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white font-bold text-sm">C</span>
             </div>
             <div className={cn(
               "ml-3 transition-all duration-300",
-              "md:hidden lg:block"
+              "lg:hidden xl:block"
             )}>
               <h1 className="text-xl font-bold text-gray-900">Clarity</h1>
               <p className="text-xs text-gray-500">CRM</p>
@@ -135,12 +135,12 @@ export default function Sidebar() {
               onClick={() => setIsMobileMenuOpen(false)}
               className={cn(
                 "flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
-                "md:justify-center lg:justify-start", // Center on tablet
+                "lg:justify-center xl:justify-start", // Center on large tablet
                 isActive
                   ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
                   : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
               )}
-              title={item.name} // Tooltip for tablet (icons only)
+              title={item.name} // Tooltip for large tablet (icons only)
             >
               <Icon className={cn(
                 "h-5 w-5 transition-colors flex-shrink-0",
@@ -148,7 +148,7 @@ export default function Sidebar() {
               )} />
               <span className={cn(
                 "ml-3 truncate transition-all duration-300",
-                "md:hidden lg:block" // Hide text on tablet
+                "lg:hidden xl:block" // Hide text on tablet
               )}>
                 {item.name}
               </span>
@@ -163,14 +163,14 @@ export default function Sidebar() {
           <>
             <div className={cn(
               "flex items-center px-3 py-3 mb-2 bg-gray-50 rounded-lg transition-all duration-300",
-              "md:justify-center lg:justify-start"
+              "lg:justify-center xl:justify-start"
             )}>
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center text-sm font-medium shadow-sm flex-shrink-0">
                 {getInitials(session.user.name)}
               </div>
               <div className={cn(
                 "ml-3 flex-1 min-w-0 transition-all duration-300",
-                "md:hidden lg:block"
+                "lg:hidden xl:block"
               )}>
                 <div className="text-sm font-medium text-gray-900 truncate">
                   {session.user.name}
@@ -184,14 +184,14 @@ export default function Sidebar() {
               onClick={handleLogout}
               className={cn(
                 "w-full flex items-center px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200",
-                "md:justify-center lg:justify-start"
+                "lg:justify-center xl:justify-start"
               )}
               title="Abmelden"
             >
               <ArrowRightOnRectangleIcon className="h-4 w-4 flex-shrink-0" />
               <span className={cn(
                 "ml-2 transition-all duration-300",
-                "md:hidden lg:block"
+                "lg:hidden xl:block"
               )}>
                 Abmelden
               </span>
@@ -200,11 +200,11 @@ export default function Sidebar() {
         ) : (
           <div className={cn(
             "px-3 py-3 transition-all duration-300",
-            "md:text-center lg:text-center"
+            "lg:text-center xl:text-center"
           )}>
             <div className={cn(
               "text-xs text-gray-500 mb-3 transition-all duration-300",
-              "md:hidden lg:block"
+              "lg:hidden xl:block"
             )}>
               Nicht angemeldet
             </div>
@@ -212,18 +212,18 @@ export default function Sidebar() {
               href="/login"
               className={cn(
                 "inline-flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm",
-                "md:justify-center lg:justify-start"
+                "lg:justify-center xl:justify-start"
               )}
             >
               <span className={cn(
                 "transition-all duration-300",
-                "md:hidden lg:block"
+                "lg:hidden xl:block"
               )}>
                 Anmelden
               </span>
               <UserIcon className={cn(
                 "h-5 w-5 transition-all duration-300",
-                "hidden md:block lg:hidden"
+                "hidden lg:block xl:hidden"
               )} />
             </Link>
           </div>

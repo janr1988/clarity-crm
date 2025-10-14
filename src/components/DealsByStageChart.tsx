@@ -107,22 +107,23 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
         <p className="text-sm text-gray-600">Pipeline distribution and values</p>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         {/* Bar Chart */}
-        <div className="h-80">
+        <div className="h-64 md:h-80">
           <h4 className="text-sm font-medium text-gray-700 mb-4">Deal Count by Stage</h4>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
               <XAxis 
                 dataKey="stageLabel" 
                 stroke="#6b7280"
-                fontSize={12}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
                 angle={-45}
                 textAnchor="end"
                 height={80}
+                interval={0}
               />
               <YAxis 
                 stroke="#6b7280"
@@ -142,7 +143,7 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
         </div>
 
         {/* Pie Chart */}
-        <div className="h-80">
+        <div className="h-64 md:h-80">
           <h4 className="text-sm font-medium text-gray-700 mb-4">Value Distribution</h4>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -151,7 +152,7 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name.substring(0, 3)}: ${(percent * 100).toFixed(0)}%`}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
@@ -174,7 +175,7 @@ export default function DealsByStageChart({ data }: DealsByStageChartProps) {
 
       {/* Summary Stats */}
       <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
           {chartData.map((item, index) => (
             <div key={item.stage} className="text-center">
               <div 

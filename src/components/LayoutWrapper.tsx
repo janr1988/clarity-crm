@@ -22,8 +22,8 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          {/* Mobile: Add padding for hamburger button */}
-          <div className="lg:hidden h-16 flex-shrink-0"></div>
+          {/* Mobile & Small Tablet: Add padding for hamburger button */}
+          <div className="xl:hidden h-16 flex-shrink-0"></div>
           {children}
         </main>
       </div>

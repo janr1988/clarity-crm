@@ -257,7 +257,7 @@ export default async function KPIsPage() {
       {/* Revenue Cards */}
       <div className="mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-4">💰 Revenue Performance</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <RevenueCard
             title="Monthly Revenue"
             current={kpis.revenue.current}
@@ -295,20 +295,20 @@ export default async function KPIsPage() {
           {/* Charts Section */}
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Analytics & Trends</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
               <RevenueChart data={kpis.monthlyRevenueData} />
               <DealsByStageChart data={kpis.dealsByStage} />
             </div>
           </div>
 
           {/* Pipeline Funnel and Top Performers */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 mb-8">
             <PipelineFunnel stages={kpis.dealsByStage} />
             <TopPerformers performers={kpis.topPerformers} />
           </div>
 
       {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-card">
           <div className="text-sm font-medium text-gray-600 mb-2">Sales Velocity</div>
           <div className="text-3xl font-bold text-gray-900">

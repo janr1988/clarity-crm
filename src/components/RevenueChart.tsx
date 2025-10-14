@@ -56,7 +56,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         <p className="text-sm text-gray-600">Monthly revenue vs targets and previous year</p>
       </div>
       
-      <div className="h-80">
+      <div className="h-64 md:h-80 lg:h-96">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <defs>
@@ -76,6 +76,8 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               fontSize={12}
               tickLine={false}
               axisLine={false}
+              interval={0}
+              tick={{ fontSize: 12 }}
             />
             <YAxis 
               stroke="#6b7280"
