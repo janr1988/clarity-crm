@@ -36,8 +36,10 @@ export const updateTaskSchema = z.object({
   status: z.enum(["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   dueDate: z.string().datetime().optional().nullable(),
-  assigneeId: z.string().min(1).optional().nullable(),
+  assigneeId: z.string().uuid().optional().nullable(),
   teamId: z.string().uuid().optional().nullable(),
+  estimatedDuration: z.number().int().positive().optional().nullable(),
+  actualDuration: z.number().int().positive().optional().nullable(),
 });
 
 // Activity schemas

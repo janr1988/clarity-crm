@@ -157,7 +157,7 @@ export default function ActivityDetailPage() {
             title: formData.title,
             description: formData.description || null,
             estimatedDuration: formData.duration ? parseInt(formData.duration) : null,
-            assigneeId: formData.userId,
+            assigneeId: formData.userId || null,
           }),
         });
       } else if (activity?._source === 'callNote') {
