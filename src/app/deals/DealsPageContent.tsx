@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { TimeFilter as TimeFilterType, getDefaultTimeFilter } from "@/lib/dateUtils";
@@ -43,28 +43,65 @@ interface DealsData {
   };
 }
 
-async function getDeals(timeFilter: TimeFilterType): Promise<DealsData> {
-  const response = await fetch(`/api/deals?filter=${timeFilter}`);
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+async function getDeals(timeFilter: TimeFilterType, ownerId?: string): Promise<DealsData> {
+  const ownerParam = ownerId ? `&ownerId=${ownerId}` : '';
+  const response = await fetch(`/api/deals?filter=${timeFilter}${ownerParam}`);
   if (!response.ok) {
     throw new Error('Failed to fetch deals');
   }
   return response.json();
 }
 
-export default function DealsPageContent() {
+async function getUsers(): Promise<User[]> {
+  const response = await fetch('/api/users');
+  if (!response.ok) {
+    return [];
+  }
+  return response.json();
+}
+
+interface DealsPageContentProps {
+  userId?: string;
+  isLead?: boolean;
+}
+
+export default function DealsPageContent({ userId, isLead }: DealsPageContentProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const timeFilter = (searchParams.get('filter') as TimeFilterType) || getDefaultTimeFilter('deals');
+  const ownerParam = searchParams.get('owner');
   
   const [data, setData] = useState<DealsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [justCreated, setJustCreated] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  
+  // Determine the default owner filter
+  const defaultOwner = !isLead && userId ? userId : 'all';
+  const [selectedOwner, setSelectedOwner] = useState<string>(ownerParam || defaultOwner);
+
+  // Fetch users for the owner filter
+  useEffect(() => {
+    async function fetchUsers() {
+      const usersData = await getUsers();
+      setUsers(usersData);
+    }
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     async function fetchDeals() {
       try {
         setLoading(true);
-        const dealsData = await getDeals(timeFilter);
+        const ownerFilter = selectedOwner === 'all' ? undefined : selectedOwner;
+        const dealsData = await getDeals(timeFilter, ownerFilter);
         setData(dealsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -74,7 +111,7 @@ export default function DealsPageContent() {
     }
 
     fetchDeals();
-  }, [timeFilter]);
+  }, [timeFilter, selectedOwner]);
 
   useEffect(() => {
     // Show success notification if redirected with created=true
@@ -115,6 +152,18 @@ export default function DealsPageContent() {
   }
 
   if (!data) return null;
+
+  const handleOwnerChange = (newOwner: string) => {
+    setSelectedOwner(newOwner);
+    // Update URL params
+    const params = new URLSearchParams(searchParams.toString());
+    if (newOwner === 'all') {
+      params.delete('owner');
+    } else {
+      params.set('owner', newOwner);
+    }
+    router.push(`/deals?${params.toString()}`);
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("de-DE", {
@@ -159,19 +208,44 @@ export default function DealsPageContent() {
           {justCreated} wurde angelegt.
         </div>
       )}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Opportunities</h1>
-          <p className="text-gray-600 mt-1">Manage sales pipeline and opportunities</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <TimeFilterComponent page="deals" />
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Opportunities</h1>
+            <p className="text-gray-600 mt-1">Manage sales pipeline and opportunities</p>
+          </div>
           <Link
             href="/deals/new"
             className="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark transition-colors"
           >
             New Opportunity
           </Link>
+        </div>
+        
+        {/* Filters */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <TimeFilterComponent page="deals" />
+          
+          {/* Owner Filter */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="owner-filter" className="text-sm font-medium text-gray-700">
+              Owner:
+            </label>
+            <select
+              id="owner-filter"
+              value={selectedOwner}
+              onChange={(e) => handleOwnerChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+            >
+              <option value="all">All Team Members</option>
+              <option value={userId || ''}>Me</option>
+              {users.filter(u => u.id !== userId).map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

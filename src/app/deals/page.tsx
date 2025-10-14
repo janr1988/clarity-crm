@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { isSalesLead } from "@/lib/authorization";
 import DealsPageContent from "./DealsPageContent";
 
 export default async function DealsPage() {
@@ -11,6 +12,9 @@ export default async function DealsPage() {
   if (!session) {
     redirect("/login");
   }
+
+  const isLead = isSalesLead(session);
+  const userId = session.user.id;
 
   return (
     <Suspense fallback={
@@ -26,7 +30,7 @@ export default async function DealsPage() {
         </div>
       </div>
     }>
-      <DealsPageContent />
+      <DealsPageContent userId={userId} isLead={isLead} />
     </Suspense>
   );
 }
