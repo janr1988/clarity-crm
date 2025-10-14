@@ -1,22 +1,40 @@
 # Clarity CRM
 
-A clean, functional CRM MVP built with Next.js, TypeScript, Tailwind CSS, and Prisma.
+A clean, functional CRM MVP built with Next.js, TypeScript, Tailwind CSS, and Prisma / SQLite.
 ## Goals
 Build a single-page application, including backend logic, to support the following use case:
 Sales Lead Overview + supporting data creation (CRM Application).
-As a sales lead:
-I can see what my team is busy with this week
-I can evaluate whether someone from my team has free capacities or not
-I can  judge the performance of my team members
-I can ensure during someone’s absence measures can be taken (e.g. a task can be handed over to another colleague)
-As any employee: 
-I can log my activities
-I can plan my tasks
+
+### As a sales lead:
+- I can see what my team is busy with this week
+- I can evaluate whether someone from my team has free capacities or not
+- I can  judge the performance of my team members
+- I can ensure during someone’s absence measures can be taken (e.g. a task can be handed over to another colleague)
+### As any employee: 
+- I can log my activities
+- I can plan my tasks
 Bonus: 
 Think of an AI functionality which would support the Head of Sales / Sales Lead with his daily work
 
 
+## What challenges and thoughts did I face during this project?
 
+- My "development pipline" with git-hub.
+- I had quite some struggles with "create" operations in the beginning hence the try and error process took quite some time. After adding a basic test coverage this process went way smoother.
+
+- "Trust the AI" / "Don't trust the AI"-Balance: to many features where created out of the box after the inital MVP prompt. Unfortunatly, a lot of them where not working out of the box. I needed quite some time fixing it / cleaning it up.
+- Manniging Dummy-Data and its relation was more challenging than I thought.
+- This new way of working also leads to a rethink about how to approach such a project. When to do what, while iterating over new features and improvements is a challenge. E.g. when to ingest test/dummy-data. How much content should you add to the first prompts etc. 
+- How much time to I need for a feature. Hard to predict right now. I have a big learning curve right now.
+
+## What would I add with more time?
+- Advanced Access & Authentification
+- Integration of email, calendar and marketing automation
+- dedicated mobile app.
+- Better User and Role conecpts.
+- Further AI automation such as task creating
+- AI chat "Selly" to support the Sales Team.
+- ....
 
 
 
@@ -46,18 +64,7 @@ Think of an AI functionality which would support the Head of Sales / Sales Lead 
 - **UI Design**: Clean, minimal design inspired by Linear, Notion, and Apple
 
 
-## What challenges and thoughts did I face during this project?
-- My "development pipline" with git-hub.
-- "Trust the AI" / "Don't trust the AI" - Balance
-- This new way of working also leads to a rethink about how to approach such a project. When to do what, while iterating over new features and improvements is a challenge. E.g. when to ingest test/dummy-data. 
-- How much time to I need for a feature. Hard to predict right now.
 
-## What would I add with more time?
-- Advanced Access & Authentification
-- Integration of email, calendar and marketing automation
-- dedicated mobile app
-- Further AI automation such as task creating
-- AI chat "Selly" to support the Sales Team.
 
 ## Testing
 
