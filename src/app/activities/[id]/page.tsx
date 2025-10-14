@@ -20,6 +20,7 @@ interface Activity {
     name: string;
     email: string;
   };
+  _source?: "activity" | "callNote" | "task";
 }
 
 interface User {
@@ -49,11 +50,55 @@ export default function ActivityDetailPage() {
     async function fetchActivity() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/activities/${params.id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch activity');
+        
+        // First, try to fetch as an activity
+        let response = await fetch(`/api/activities/${params.id}`);
+        let activityData = null;
+        
+        if (response.ok) {
+          activityData = await response.json();
+        } else if (response.status === 404) {
+          // If not found as activity, try as task
+          response = await fetch(`/api/tasks/${params.id}`);
+          if (response.ok) {
+            const taskData = await response.json();
+            // Transform task to activity format
+            activityData = {
+              id: taskData.id,
+              title: taskData.title,
+              description: taskData.description,
+              type: taskData.status === "COMPLETED" ? "TASK_COMPLETED" : "TASK",
+              duration: taskData.actualDuration || taskData.estimatedDuration,
+              createdAt: taskData.createdAt,
+              updatedAt: taskData.updatedAt,
+              user: taskData.assignee,
+              _source: "task"
+            };
+          } else if (response.status === 404) {
+            // If not found as task, try as call note
+            response = await fetch(`/api/call-notes/${params.id}`);
+            if (response.ok) {
+              const callNoteData = await response.json();
+              // Transform call note to activity format
+              activityData = {
+                id: callNoteData.id,
+                title: `Call with ${callNoteData.clientName}`,
+                description: callNoteData.notes,
+                type: "CALL",
+                duration: callNoteData.duration,
+                createdAt: callNoteData.createdAt,
+                updatedAt: callNoteData.updatedAt,
+                user: callNoteData.user,
+                _source: "callNote"
+              };
+            }
+          }
         }
-        const activityData = await response.json();
+        
+        if (!activityData) {
+          throw new Error('Activity not found');
+        }
+        
         setActivity(activityData);
         setFormData({
           title: activityData.title || "",
@@ -92,25 +137,87 @@ export default function ActivityDetailPage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const response = await fetch(`/api/activities/${params.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description || null,
-          type: formData.type,
-          duration: formData.duration ? parseInt(formData.duration) : null,
-          userId: formData.userId,
-        }),
-      });
+      
+      let response;
+      const updateData = {
+        title: formData.title,
+        description: formData.description || null,
+        duration: formData.duration ? parseInt(formData.duration) : null,
+        userId: formData.userId,
+      };
+
+      // Determine which API endpoint to use based on the source
+      if (activity?._source === 'task') {
+        response = await fetch(`/api/tasks/${params.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description || null,
+            estimatedDuration: formData.duration ? parseInt(formData.duration) : null,
+            assigneeId: formData.userId,
+          }),
+        });
+      } else if (activity?._source === 'callNote') {
+        response = await fetch(`/api/call-notes/${params.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            notes: formData.description || null,
+            duration: formData.duration ? parseInt(formData.duration) : null,
+            userId: formData.userId,
+          }),
+        });
+      } else {
+        // Regular activity
+        response = await fetch(`/api/activities/${params.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description || null,
+            type: formData.type,
+            duration: formData.duration ? parseInt(formData.duration) : null,
+            userId: formData.userId,
+          }),
+        });
+      }
 
       if (!response.ok) {
         throw new Error('Failed to update activity');
       }
 
-      const updatedActivity = await response.json();
+      const updatedData = await response.json();
+      
+      // Transform the response back to activity format if needed
+      let updatedActivity;
+      if (activity?._source === 'task') {
+        updatedActivity = {
+          ...activity,
+          title: updatedData.title,
+          description: updatedData.description,
+          duration: updatedData.actualDuration || updatedData.estimatedDuration,
+          user: updatedData.assignee,
+          updatedAt: updatedData.updatedAt,
+        };
+      } else if (activity?._source === 'callNote') {
+        updatedActivity = {
+          ...activity,
+          description: updatedData.notes,
+          duration: updatedData.duration,
+          user: updatedData.user,
+          updatedAt: updatedData.updatedAt,
+        };
+      } else {
+        updatedActivity = updatedData;
+      }
+      
       setActivity(updatedActivity);
       setEditing(false);
     } catch (err) {
@@ -126,9 +233,23 @@ export default function ActivityDetailPage() {
     }
 
     try {
-      const response = await fetch(`/api/activities/${params.id}`, {
-        method: 'DELETE',
-      });
+      let response;
+      
+      // Determine which API endpoint to use based on the source
+      if (activity?._source === 'task') {
+        response = await fetch(`/api/tasks/${params.id}`, {
+          method: 'DELETE',
+        });
+      } else if (activity?._source === 'callNote') {
+        response = await fetch(`/api/call-notes/${params.id}`, {
+          method: 'DELETE',
+        });
+      } else {
+        // Regular activity
+        response = await fetch(`/api/activities/${params.id}`, {
+          method: 'DELETE',
+        });
+      }
 
       if (!response.ok) {
         throw new Error('Failed to delete activity');
@@ -230,7 +351,7 @@ export default function ActivityDetailPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Title
                 </label>
-                {editing ? (
+                {editing && activity._source !== 'callNote' ? (
                   <input
                     type="text"
                     value={formData.title}
@@ -248,7 +369,7 @@ export default function ActivityDetailPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Type
                 </label>
-                {editing ? (
+                {editing && activity._source !== 'task' && activity._source !== 'callNote' ? (
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
@@ -268,7 +389,7 @@ export default function ActivityDetailPage() {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  {activity._source === 'callNote' ? 'Call Notes' : 'Description'}
                 </label>
                 {editing ? (
                   <textarea
