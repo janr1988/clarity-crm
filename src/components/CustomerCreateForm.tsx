@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
 interface CustomerCreateFormProps {
   onSuccess?: () => void;
 }
@@ -11,11 +16,13 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -40,7 +47,19 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create customer");
+        
+        if (errorData.details) {
+          // Handle Zod validation errors
+          const errors: Record<string, string> = {};
+          errorData.details.forEach((err: ValidationError) => {
+            errors[err.field] = err.message;
+          });
+          setFieldErrors(errors);
+          setError("Please fix the errors below");
+        } else {
+          setError(errorData.error || "Failed to create customer");
+        }
+        return;
       }
 
       const customer = await response.json();
@@ -57,11 +76,19 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
     }
   };
 
+  const getFieldError = (fieldName: string) => fieldErrors[fieldName];
+  const hasFieldError = (fieldName: string) => !!fieldErrors[fieldName];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </div>
         </div>
       )}
 
@@ -75,9 +102,16 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             name="name"
             type="text"
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('name') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
             placeholder="Max Mustermann"
           />
+          {hasFieldError('name') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('name')}</p>
+          )}
         </div>
 
         <div>
@@ -88,9 +122,16 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             id="email"
             name="email"
             type="email"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('email') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
             placeholder="max.mustermann@company.com"
           />
+          {hasFieldError('email') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('email')}</p>
+          )}
         </div>
 
         <div>
@@ -101,9 +142,16 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             id="phone"
             name="phone"
             type="tel"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('phone') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
             placeholder="+49 123 4567890"
           />
+          {hasFieldError('phone') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('phone')}</p>
+          )}
         </div>
 
         <div>
@@ -114,9 +162,16 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             id="company"
             name="company"
             type="text"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('company') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
             placeholder="TechCorp GmbH"
           />
+          {hasFieldError('company') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('company')}</p>
+          )}
         </div>
 
         <div>
@@ -127,9 +182,16 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             id="position"
             name="position"
             type="text"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('position') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
             placeholder="CEO, CTO, Sales Director..."
           />
+          {hasFieldError('position') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('position')}</p>
+          )}
         </div>
 
         <div>
@@ -140,13 +202,20 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             id="status"
             name="status"
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('status') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
           >
             <option value="LEAD">Lead</option>
             <option value="PROSPECT">Prospect</option>
             <option value="CUSTOMER">Customer</option>
             <option value="INACTIVE">Inactive</option>
           </select>
+          {hasFieldError('status') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('status')}</p>
+          )}
         </div>
 
         <div>
@@ -156,7 +225,11 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
           <select
             id="source"
             name="source"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('source') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
           >
             <option value="">Select source...</option>
             <option value="WEBSITE">Website</option>
@@ -166,6 +239,9 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             <option value="TRADE_SHOW">Trade Show</option>
             <option value="OTHER">Other</option>
           </select>
+          {hasFieldError('source') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('source')}</p>
+          )}
         </div>
 
         <div>
@@ -178,9 +254,16 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
             type="number"
             min="0"
             step="0.01"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+              hasFieldError('value') 
+                ? 'border-red-300 bg-red-50' 
+                : 'border-gray-300'
+            }`}
             placeholder="25000"
           />
+          {hasFieldError('value') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('value')}</p>
+          )}
         </div>
       </div>
 
@@ -192,9 +275,16 @@ export default function CustomerCreateForm({ onSuccess }: CustomerCreateFormProp
           id="notes"
           name="notes"
           rows={3}
-          className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+          className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent ${
+            hasFieldError('notes') 
+              ? 'border-red-300 bg-red-50' 
+              : 'border-gray-300'
+          }`}
           placeholder="Additional notes about this customer..."
         />
+        {hasFieldError('notes') && (
+          <p className="mt-1 text-sm text-red-600">{getFieldError('notes')}</p>
+        )}
       </div>
 
       <div className="flex gap-4">

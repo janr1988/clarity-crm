@@ -1,31 +1,15 @@
 import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { isSalesLead } from "@/lib/authorization";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import DealsPageContent from "./DealsPageContent";
 
 export default async function DealsPage() {
   const session = await getServerSession(authOptions);
   
-  // Only Sales Lead can access deals
-  if (!isSalesLead(session)) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h2 className="text-xl font-bold text-red-900 mb-2">🚫 Access Denied</h2>
-          <p className="text-red-800 mb-4">
-            Deals management is only available for Sales Leads.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-          >
-            ← Back to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
+  // Redirect to login if not authenticated
+  if (!session) {
+    redirect("/login");
   }
 
   return (

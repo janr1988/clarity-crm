@@ -92,16 +92,40 @@ export const updateTeamSchema = z.object({
 
 // Customer schemas
 export const createCustomerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional().or(z.literal("")),
-  company: z.string().optional().or(z.literal("")),
-  position: z.string().optional().or(z.literal("")),
-  status: z.enum(["LEAD", "PROSPECT", "CUSTOMER", "INACTIVE"]),
-  source: z.enum(["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"]).optional(),
-  value: z.number().positive().optional(),
-  notes: z.string().optional().or(z.literal("")),
-  assignedTo: z.string().uuid().optional(),
+  name: z.string()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters"),
+  email: z.string()
+    .email("Please enter a valid email address")
+    .optional()
+    .or(z.literal("")),
+  phone: z.string()
+    .regex(/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number")
+    .optional()
+    .or(z.literal("")),
+  company: z.string()
+    .max(100, "Company name must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
+  position: z.string()
+    .max(100, "Position must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
+  status: z.enum(["LEAD", "PROSPECT", "CUSTOMER", "INACTIVE"], {
+    errorMap: () => ({ message: "Please select a valid status" })
+  }),
+  source: z.enum(["WEBSITE", "REFERRAL", "COLD_CALL", "SOCIAL_MEDIA", "TRADE_SHOW", "OTHER"], {
+    errorMap: () => ({ message: "Please select a valid source" })
+  }).optional(),
+  value: z.number()
+    .positive("Deal value must be greater than 0")
+    .max(999999999, "Deal value is too large")
+    .optional(),
+  notes: z.string()
+    .max(1000, "Notes must be less than 1000 characters")
+    .optional()
+    .or(z.literal("")),
+  assignedTo: z.string().uuid("Invalid user ID").optional(),
 });
 
 export const updateCustomerSchema = z.object({

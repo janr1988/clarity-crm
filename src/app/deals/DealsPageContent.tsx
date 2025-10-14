@@ -9,7 +9,7 @@ import TimeFilterComponent from "@/components/TimeFilter";
 
 interface Deal {
   id: string;
-  title: string;
+  title: string | null;
   value: number;
   stage: string;
   probability: number;
@@ -223,7 +223,7 @@ export default function DealsPageContent() {
                       href={`/deals/${deal.id}`}
                       className="font-medium text-gray-900 hover:text-primary transition-colors"
                     >
-                      {deal.title}
+                      {deal.title || 'Untitled Deal'}
                     </Link>
                     {deal.customer && (
                       <p className="text-sm text-gray-600 mt-1">{deal.customer.name}</p>
@@ -326,7 +326,7 @@ export default function DealsPageContent() {
                       href={`/deals/${deal.id}`}
                       className="font-medium text-gray-900 hover:text-primary transition-colors text-sm"
                     >
-                      {deal.title.length > 20 ? `${deal.title.substring(0, 20)}...` : deal.title}
+                      {deal.title && deal.title.length > 20 ? `${deal.title.substring(0, 20)}...` : deal.title || 'Untitled Deal'}
                     </Link>
                     {deal.customer && (
                       <p className="text-xs text-gray-600 mt-1">{deal.customer.name}</p>
