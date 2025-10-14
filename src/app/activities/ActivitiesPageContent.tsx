@@ -219,7 +219,12 @@ export default function ActivitiesPageContent() {
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900">{activity.title}</h3>
+                      <Link
+                        href={`/activities/${activity.id}`}
+                        className="font-medium text-gray-900 hover:text-primary transition-colors"
+                      >
+                        {activity.title}
+                      </Link>
                       {isSalesLead(session) ? (
                         <select
                           value={activity.user.id}
