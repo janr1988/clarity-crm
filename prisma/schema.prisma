@@ -36,6 +36,7 @@ model User {
   dealsCreated       Deal[]      @relation("DealCreator")
   dealNotes          DealNote[]
   targets            Target[]
+  capacity           UserCapacity?
 
   @@index([teamId])
   @@index([role])
@@ -73,12 +74,23 @@ model Task {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Capacity Management Fields
+  plannedWeek      DateTime? // Start of the week this is planned for (Monday)
+  actualStartDate  DateTime? // When it actually started
+  actualEndDate    DateTime? // When it was actually completed
+  estimatedDuration Int?     // Estimated time in minutes
+  actualDuration   Int?      // Actual time spent in minutes
+  isPlanned        Boolean   @default(false) // Is this a planned task?
+  kanbanStatus     String    @default("TODO") // TODO, IN_PROGRESS, COMPLETED
+
   @@index([assigneeId])
   @@index([createdById])
   @@index([status])
   @@index([teamId])
   @@index([customerId])
   @@index([companyId])
+  @@index([plannedWeek])
+  @@index([kanbanStatus])
 }
 
 model Activity {
@@ -96,10 +108,20 @@ model Activity {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Capacity Management Fields
+  plannedWeek      DateTime? // Start of the week this is planned for (Monday)
+  actualDate       DateTime? // When it actually happened
+  estimatedDuration Int?     // Estimated duration in minutes
+  isPlanned        Boolean   @default(false) // Is this planned?
+  kanbanStatus     String    @default("TODO") // TODO, IN_PROGRESS, COMPLETED
+  activityType     String    @default("TASK") // TASK, CALL, MEETING, EMAIL
+
   @@index([userId])
   @@index([customerId])
   @@index([companyId])
   @@index([createdAt])
+  @@index([plannedWeek])
+  @@index([kanbanStatus])
 }
 
 model CallNote {
@@ -267,5 +289,22 @@ model Target {
   @@index([userId])
   @@index([period])
   @@index([year])
+}
+
+// User Capacity Management
+model UserCapacity {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  maxItemsPerWeek   Int      @default(8) // Total tasks + calls per week
+  workingDays       String   @default("monday,tuesday,wednesday,thursday,friday") // Comma-separated working days
+  workingHoursStart Int      @default(9) // Start hour (24-hour format)
+  workingHoursEnd   Int      @default(17) // End hour (24-hour format)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([isActive])
 }
 
