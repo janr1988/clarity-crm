@@ -6,11 +6,15 @@ import { useRouter } from "next/navigation";
 
 type Company = { id: string; name: string };
 type User = { id: string; name: string; email: string };
+type Customer = { id: string; name: string; companyId: string };
 
 export default function Page() {
   const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string[] | null>(null);
@@ -30,6 +34,17 @@ export default function Page() {
       });
   }, []);
 
+  // Load customers when company changes
+  useEffect(() => {
+    setCustomers([]);
+    setSelectedCustomerId("");
+    if (!selectedCompanyId) return;
+    fetch(`/api/customers?companyId=${encodeURIComponent(selectedCompanyId)}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setCustomers(Array.isArray(data) ? data : []))
+      .catch(() => setCustomers([]));
+  }, [selectedCompanyId]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
@@ -43,8 +58,16 @@ export default function Page() {
       probability: 50,
       stage: String(form.get("stage") || "PROSPECTING"),
       companyId: String(form.get("companyId") || "").trim() || undefined,
+      customerId: String(form.get("customerId") || "").trim() || undefined,
       ownerId: String(form.get("ownerId") || "").trim() || undefined,
     };
+
+    // Frontend guard — require both selections
+    if (!payload.companyId || !payload.customerId) {
+      setIsLoading(false);
+      setError("Please select a company and a customer.");
+      return;
+    }
 
     try {
       const res = await fetch("/api/deals", {
@@ -156,15 +179,38 @@ export default function Page() {
 
             <div>
               <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">
-                Company
+                Company *
               </label>
               <select
                 id="companyId"
                 name="companyId"
+                required
+                value={selectedCompanyId}
+                onChange={(e) => setSelectedCompanyId(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="">Select a company</option>
                 {companies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="customerId" className="block text-sm font-medium text-gray-700 mb-1">
+                Customer *
+              </label>
+              <select
+                id="customerId"
+                name="customerId"
+                required
+                disabled={!selectedCompanyId}
+                value={selectedCustomerId}
+                onChange={(e) => setSelectedCustomerId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
+              >
+                <option value="">{selectedCompanyId ? "Select a customer" : "Select a company first"}</option>
+                {customers.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>

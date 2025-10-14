@@ -8,12 +8,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get("status");
     const assignedTo = searchParams.get("assignedTo");
+    const companyId = searchParams.get("companyId");
     const search = searchParams.get("search");
 
     const customers = await prisma.customer.findMany({
       where: {
         ...(status && { status }),
         ...(assignedTo && { assignedTo }),
+        ...(companyId && { companyId }),
         ...(search && {
           OR: [
             { name: { contains: search, mode: "insensitive" } },
