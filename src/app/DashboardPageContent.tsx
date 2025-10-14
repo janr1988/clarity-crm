@@ -312,6 +312,69 @@ export default function DashboardPageContent({ userId, isLead, userName, teamId 
           <TeamCapacityOverview teamId={teamId} weekStart={getWeekStart()} />
         )}
 
+        {/* My Active Tasks - Only for Sales Agent */}
+        {!isLead && (
+          <div className="bg-white p-6 rounded shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">My Active Tasks</h2>
+              <Link
+                href="/tasks"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View All
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {data.tasks.length > 0 ? (
+                data.tasks.slice(0, 5).map((task) => (
+                  <div key={task.id} className="border-l-4 border-primary pl-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <Link
+                          href={`/tasks/${task.id}`}
+                          className="font-medium text-gray-900 hover:text-primary"
+                        >
+                          {task.title}
+                        </Link>
+                        {task.description && (
+                          <div className="text-sm text-gray-600 mt-1 line-clamp-2">
+                            {task.description}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            task.status === 'TODO' ? 'bg-gray-100 text-gray-800' : 
+                            task.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' : 
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {task.status.replace('_', ' ')}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            task.priority === 'HIGH' ? 'bg-red-100 text-red-800' : 
+                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {task.priority}
+                          </span>
+                          {task.dueDate && (
+                            <span className="text-xs text-gray-500">
+                              Due: {formatDate(task.dueDate)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No active tasks
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Recent Activities */}
         <div className="bg-white p-6 rounded shadow-card">
           <div className="flex items-center justify-between mb-4">
@@ -324,21 +387,27 @@ export default function DashboardPageContent({ userId, isLead, userName, teamId 
             </Link>
           </div>
           <div className="space-y-4">
-            {data.activities.map((activity) => (
-              <div key={activity.id} className="flex items-start space-x-3">
-                <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-sm flex-shrink-0">
-                  {activity.type.charAt(0)}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">
-                    {activity.title}
+            {data.activities.length > 0 ? (
+              data.activities.map((activity) => (
+                <div key={activity.id} className="flex items-start space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-sm flex-shrink-0">
+                    {activity.type.charAt(0)}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {activity.user.name} on {formatDate(activity.createdAt)}
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">
+                      {activity.title}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {activity.user.name} on {formatDate(activity.createdAt)}
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No recent activities
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
