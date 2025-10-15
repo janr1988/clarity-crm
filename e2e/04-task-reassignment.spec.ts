@@ -176,7 +176,13 @@ test.describe('Critical Flow: Task Reassignment', () => {
     const taskTitle = `Data Integrity ${testData.unique}`;
     const taskDescription = 'This is a test description';
     
-    await page.fill('input[name="title"], #title', taskTitle);
+    // Wait for form to load and fill title
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    
+    const titleInput = page.locator('input[name="title"], #title, input[type="text"]').first();
+    await titleInput.waitFor({ timeout: 10000 });
+    await titleInput.fill(taskTitle);
     
     const descriptionField = page.locator('textarea[name="description"], #description').first();
     if (await descriptionField.count() > 0) {

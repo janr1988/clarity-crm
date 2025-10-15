@@ -36,8 +36,15 @@ test.describe('Critical Flow: Task Creation', () => {
     
     // Step 4: Fill in the task form
     const taskTitle = `E2E Test Task ${testData.unique}`;
-    await page.waitForSelector('input[name="title"], #title, input[type="text"]', { timeout: 10000 });
-    await page.fill('input[name="title"], #title, input[type="text"]', taskTitle);
+    
+    // Wait for the form to load and try multiple selectors
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    
+    // Try to find the title input with multiple strategies
+    const titleInput = page.locator('input[name="title"], #title, input[type="text"]').first();
+    await titleInput.waitFor({ timeout: 10000 });
+    await titleInput.fill(taskTitle);
     
     // Select priority
     const prioritySelect = page.locator('select[name="priority"], #priority').first();
