@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createCallNoteSchema } from "@/lib/validation";
-import { ZodError } from "zod";
+import { requireAuth, validateReferences } from "@/lib/api-helpers";
+import { handleApiError } from "@/lib/errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,50 +33,55 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(callNotes);
   } catch (error) {
-    console.error("Error fetching call notes:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch call notes" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireAuth();
     const body = await request.json();
     const validatedData = createCallNoteSchema.parse(body);
 
+    // Validate foreign keys if provided
+    await validateReferences({
+      userId: validatedData.userId,
+      customerId: body.customerId,
+    });
+
     const callNote = await prisma.callNote.create({
       data: {
-        ...validatedData,
-        ...(validatedData.followUpDate && {
-          followUpDate: new Date(validatedData.followUpDate),
-        }),
+        clientName: validatedData.clientName,
+        clientCompany: validatedData.clientCompany || null,
+        phoneNumber: validatedData.phoneNumber || null,
+        notes: validatedData.notes,
+        summary: validatedData.summary || null,
+        outcome: validatedData.outcome || null,
+        followUpDate: validatedData.followUpDate ? new Date(validatedData.followUpDate) : null,
+        userId: validatedData.userId,
+        customerId: body.customerId || null,
       },
       include: {
-        user: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
     return NextResponse.json(callNote, { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { 
-          error: "Validation failed", 
-          details: error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
-        },
-        { status: 400 }
-      );
-    }
-    console.error("Error creating call note:", error);
-    return NextResponse.json(
-      { error: "Failed to create call note" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

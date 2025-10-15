@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+// Helper for sanitizing strings (handles optional/undefined values)
+const sanitizeString = (str: string | undefined) => str?.trim();
+
+// Helper for creating sanitized string schema
+const sanitizedString = (schema: z.ZodString = z.string()) => 
+  schema.transform((val) => val ? sanitizeString(val) : val);
+
 // User schemas
 export const createUserSchema = z.object({
   email: z.string().email(),
@@ -21,8 +28,8 @@ export const updateUserSchema = z.object({
 
 // Task schemas
 export const createTaskSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  title: z.string().min(1, "Title is required").transform((val) => val.trim()),
+  description: sanitizedString(z.string().optional()),
   status: z.enum(["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).default("TODO"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
   dueDate: z.string().datetime().optional(),
@@ -61,12 +68,12 @@ export const updateActivitySchema = z.object({
 
 // CallNote schemas
 export const createCallNoteSchema = z.object({
-  clientName: z.string().min(1, "Client name is required"),
-  clientCompany: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  notes: z.string().min(1, "Notes are required"),
-  summary: z.string().optional(),
-  outcome: z.string().optional(),
+  clientName: z.string().min(1, "Client name is required").transform((val) => val.trim()),
+  clientCompany: sanitizedString(z.string().optional()),
+  phoneNumber: sanitizedString(z.string().optional()),
+  notes: z.string().min(1, "Notes are required").transform((val) => val.trim()),
+  summary: sanitizedString(z.string().optional()),
+  outcome: sanitizedString(z.string().optional()),
   followUpDate: z.string().datetime().optional(),
   userId: z.string().uuid(),
 });

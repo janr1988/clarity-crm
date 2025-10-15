@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createCustomerSchema } from "@/lib/validation";
-import { ZodError } from "zod";
+import { requireAuth, validateReferences } from "@/lib/api-helpers";
+import { handleApiError } from "@/lib/errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,10 +19,10 @@ export async function GET(request: NextRequest) {
         ...(companyId && { companyId }),
         ...(search && {
           OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { company: { contains: search, mode: "insensitive" } },
-            { email: { contains: search, mode: "insensitive" } },
-            { companyRef: { name: { contains: search, mode: "insensitive" } } },
+            { name: { contains: search } },
+            { company: { contains: search } },
+            { email: { contains: search } },
+            { companyRef: { is: { name: { contains: search } } } },
           ],
         }),
       },
@@ -48,23 +49,36 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(customers);
   } catch (error) {
-    console.error("Error fetching customers:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch customers" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireAuth();
     const body = await request.json();
     const validatedData = createCustomerSchema.parse(body);
 
+    // Validate foreign keys if provided
+    if (validatedData.assignedTo) {
+      await validateReferences({
+        userId: validatedData.assignedTo,
+      });
+    }
+
     const customer = await prisma.customer.create({
       data: {
-        ...validatedData,
-        createdBy: "temp-user-id", // Will be replaced with actual user ID from session
+        name: validatedData.name,
+        email: validatedData.email || null,
+        phone: validatedData.phone || null,
+        company: validatedData.company || null,
+        position: validatedData.position || null,
+        status: validatedData.status,
+        source: validatedData.source || null,
+        value: validatedData.value || null,
+        notes: validatedData.notes || null,
+        assignedTo: validatedData.assignedTo || null,
+        createdBy: session.user.id,
       },
       include: {
         creator: {
@@ -88,22 +102,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(customer, { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { 
-          error: "Validation failed", 
-          details: error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
-        },
-        { status: 400 }
-      );
-    }
-    console.error("Error creating customer:", error);
-    return NextResponse.json(
-      { error: "Failed to create customer" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

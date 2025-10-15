@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createTaskSchema } from "@/lib/validation";
-import { ZodError } from "zod";
+import { requireAuth, validateReferences } from "@/lib/api-helpers";
+import { handleApiError } from "@/lib/errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,66 +57,63 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(tasks);
   } catch (error) {
-    console.error("Error fetching tasks:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch tasks" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireAuth();
     const body = await request.json();
-    const { createdById, ...rest } = body;
+    const validatedData = createTaskSchema.parse(body);
 
-    // For now, use a default user as createdBy
-    // In production, get this from session/auth
-    const defaultUser = await prisma.user.findFirst({
-      where: { role: "SALES_LEAD" },
-    });
-
-    if (!defaultUser) {
-      return NextResponse.json(
-        { error: "No sales lead found to create task" },
-        { status: 400 }
-      );
+    // Validate foreign keys if provided
+    if (validatedData.assigneeId || validatedData.teamId) {
+      await validateReferences({
+        userId: validatedData.assigneeId,
+        teamId: validatedData.teamId,
+      });
     }
-
-    const validatedData = createTaskSchema.parse(rest);
 
     const task = await prisma.task.create({
       data: {
-        ...validatedData,
-        ...(validatedData.dueDate && { dueDate: new Date(validatedData.dueDate) }),
-        createdById: createdById || defaultUser.id,
+        title: validatedData.title,
+        description: validatedData.description || null,
+        status: validatedData.status,
+        priority: validatedData.priority,
+        dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
+        assigneeId: validatedData.assigneeId || null,
+        teamId: validatedData.teamId || null,
+        createdById: session.user.id,
       },
       include: {
-        assignee: true,
-        createdBy: true,
-        team: true,
+        assignee: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        team: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { 
-          error: "Validation failed", 
-          details: error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
-        },
-        { status: 400 }
-      );
-    }
-    console.error("Error creating task:", error);
-    return NextResponse.json(
-      { error: "Failed to create task" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

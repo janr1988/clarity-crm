@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createActivitySchema } from "@/lib/validation";
-import { ZodError } from "zod";
+import { requireAuth, validateReferences } from "@/lib/api-helpers";
+import { handleApiError } from "@/lib/errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
       type: "CALL",
       title: `Call with ${call.clientName}`,
       description: call.notes,
-      duration: call.duration,
+      duration: null, // CallNote doesn't have duration field
       userId: call.userId,
       user: call.user,
       customerId: call.customerId,
@@ -128,45 +129,60 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(allActivities);
   } catch (error) {
-    console.error("Error fetching activities:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch activities" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireAuth();
     const body = await request.json();
     const validatedData = createActivitySchema.parse(body);
 
+    // Validate foreign keys if provided
+    await validateReferences({
+      userId: validatedData.userId,
+      customerId: body.customerId,
+      companyId: body.companyId,
+    });
+
     const activity = await prisma.activity.create({
-      data: validatedData,
+      data: {
+        type: validatedData.type,
+        title: validatedData.title,
+        description: validatedData.description,
+        duration: validatedData.duration,
+        userId: validatedData.userId,
+        customerId: body.customerId || null,
+        companyId: body.companyId || null,
+      },
       include: {
-        user: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     return NextResponse.json(activity, { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { 
-          error: "Validation failed", 
-          details: error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
-        },
-        { status: 400 }
-      );
-    }
-    console.error("Error creating activity:", error);
-    return NextResponse.json(
-      { error: "Failed to create activity" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

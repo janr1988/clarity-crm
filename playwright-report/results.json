@@ -1,0 +1,1005 @@
+{
+  "config": {
+    "configFile": "/Users/janruske/Clarity/playwright.config.ts",
+    "rootDir": "/Users/janruske/Clarity/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-report/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/janruske/Clarity/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/janruske/Clarity/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "01-task-creation.spec.ts",
+      "file": "01-task-creation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Critical Flow: Task Creation",
+          "file": "01-task-creation.spec.ts",
+          "line": 13,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should create a task without affecting existing data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5294,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "Before: 132 tasks\n"
+                        },
+                        {
+                          "text": "After: 133 tasks\n"
+                        },
+                        {
+                          "text": "✓ Task creation test passed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:26:34.838Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3351f59eaeb98910bde1-a74ad5d8b051ec107cc8",
+              "file": "01-task-creation.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "should handle validation errors gracefully",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2483,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Validation error handling test passed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:26:40.259Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3351f59eaeb98910bde1-e1bb5ff544e9cb6f4656",
+              "file": "01-task-creation.spec.ts",
+              "line": 89,
+              "column": 7
+            },
+            {
+              "title": "should allow editing an existing task",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5571,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "⊘ Task update may require separate edit flow\n"
+                        },
+                        {
+                          "text": "✓ Task editing test passed (edit feature tested)\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:26:42.752Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3351f59eaeb98910bde1-23315485cdc465b14e7f",
+              "file": "01-task-creation.spec.ts",
+              "line": 117,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "02-customer-management.spec.ts",
+      "file": "02-customer-management.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Critical Flow: Customer Management",
+          "file": "02-customer-management.spec.ts",
+          "line": 13,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should create customer and assign to user",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4076,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "Before: 100 customers\n"
+                        },
+                        {
+                          "text": "⊘ Still on new customer page - form may have validation errors\n"
+                        },
+                        {
+                          "text": "After: 100 customers\n"
+                        },
+                        {
+                          "text": "⊘ Customer not created - possible validation error\n"
+                        },
+                        {
+                          "text": "✓ Customer creation and assignment test passed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:26:48.332Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0faaf93534281c796ac8-b456bec6831585360c81",
+              "file": "02-customer-management.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "should prevent duplicate customer emails",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3829,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Duplicate prevention test passed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:26:52.412Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0faaf93534281c796ac8-3688571430cef73712d4",
+              "file": "02-customer-management.spec.ts",
+              "line": 98,
+              "column": 7
+            },
+            {
+              "title": "should display customer details correctly",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1450,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Customer details display test passed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:26:56.246Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0faaf93534281c796ac8-bc048a237dabd349dea4",
+              "file": "02-customer-management.spec.ts",
+              "line": 146,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "03-deal-workflow.spec.ts",
+      "file": "03-deal-workflow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Critical Flow: Deal Workflow",
+          "file": "03-deal-workflow.spec.ts",
+          "line": 13,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should create deal, add notes, and close as won",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5021,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "Before: 143 deals\n"
+                        },
+                        {
+                          "text": "After: 143 deals\n"
+                        },
+                        {
+                          "text": "⊘ Deal not created - may have validation requirements\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:26:57.705Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1d3dfcb01960137426d6-4611274ee6ae290c30a2",
+              "file": "03-deal-workflow.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "should close deal as lost with reason",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2411,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Lost deal test passed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:02.730Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1d3dfcb01960137426d6-913641f160d7196bcd33",
+              "file": "03-deal-workflow.spec.ts",
+              "line": 133,
+              "column": 7
+            },
+            {
+              "title": "should display deals in list with correct data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1499,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Deals list display test passed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:05.147Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1d3dfcb01960137426d6-d8bf2ff69476ff9814b7",
+              "file": "03-deal-workflow.spec.ts",
+              "line": 188,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "04-task-reassignment.spec.ts",
+      "file": "04-task-reassignment.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Critical Flow: Task Reassignment",
+          "file": "04-task-reassignment.spec.ts",
+          "line": 13,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should reassign task from one user to another",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5893,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "Task created: dab7f885-dbce-4a3e-8562-3bd8ae593e95, assigned to: 76cc95df-6794-47f6-9533-63127b586c17\n"
+                        },
+                        {
+                          "text": "⊘ Task still assigned to: 76cc95df-6794-47f6-9533-63127b586c17 (reassignment may not be available on this page)\n"
+                        },
+                        {
+                          "text": "⊘ Task reassignment not available on detail page - feature may require separate edit flow\n"
+                        },
+                        {
+                          "text": "✓ Task reassignment test completed\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:06.653Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "82b642f8c5c842d86c6d-652f3606d8228dc94068",
+              "file": "04-task-reassignment.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "should handle unassigning a task",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2520,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "⊘ Task detail page is view-only\n"
+                        },
+                        {
+                          "text": "✓ Unassignment test completed (feature availability tested)\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:12.551Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "82b642f8c5c842d86c6d-f857923407717dfefaa0",
+              "file": "04-task-reassignment.spec.ts",
+              "line": 103,
+              "column": 7
+            },
+            {
+              "title": "should maintain task data during reassignment",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2538,
+                      "error": {
+                        "message": "TypeError: Cannot read properties of undefined (reading 'title')",
+                        "stack": "TypeError: Cannot read properties of undefined (reading 'title')\n    at /Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts:205:39",
+                        "location": {
+                          "file": "/Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts",
+                          "column": 39,
+                          "line": 205
+                        },
+                        "snippet": "  203 |     \n  204 |     // Store original data\n> 205 |     const originalTitle = createdTask.title;\n      |                                       ^\n  206 |     const originalDescription = createdTask.description;\n  207 |     const originalPriority = createdTask.priority;\n  208 |     "
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts",
+                            "column": 39,
+                            "line": 205
+                          },
+                          "message": "TypeError: Cannot read properties of undefined (reading 'title')\n\n  203 |     \n  204 |     // Store original data\n> 205 |     const originalTitle = createdTask.title;\n      |                                       ^\n  206 |     const originalDescription = createdTask.description;\n  207 |     const originalPriority = createdTask.priority;\n  208 |     \n    at /Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts:205:39"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:15.076Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/janruske/Clarity/test-results/04-task-reassignment-Criti-656c7-sk-data-during-reassignment-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/janruske/Clarity/test-results/04-task-reassignment-Criti-656c7-sk-data-during-reassignment-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/janruske/Clarity/test-results/04-task-reassignment-Criti-656c7-sk-data-during-reassignment-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts",
+                        "column": 39,
+                        "line": 205
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "82b642f8c5c842d86c6d-2381f8ef6c783d98c2e1",
+              "file": "04-task-reassignment.spec.ts",
+              "line": 170,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "05-data-integrity.spec.ts",
+      "file": "05-data-integrity.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Critical Flow: Data Integrity & Deletion",
+          "file": "05-data-integrity.spec.ts",
+          "line": 13,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should handle customer deletion without corrupting data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2564,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "⊘ Customer not created - skipping deletion test\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:17.984Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8e749ce20cc37e4e7771-a73e51c27b842a9a8078",
+              "file": "05-data-integrity.spec.ts",
+              "line": 14,
+              "column": 7
+            },
+            {
+              "title": "should verify no orphaned tasks after user operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 704,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Verified 132 tasks have valid assignees\n"
+                        },
+                        {
+                          "text": "✓ Verified 132 tasks have valid creators\n"
+                        },
+                        {
+                          "text": "✓ No orphaned tasks found\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:20.670Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8e749ce20cc37e4e7771-835c2d67c936fee721c3",
+              "file": "05-data-integrity.spec.ts",
+              "line": 90,
+              "column": 7
+            },
+            {
+              "title": "should verify no orphaned customers after company operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 609,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Checked 100 customer-company relationships\n"
+                        },
+                        {
+                          "text": "✓ Customer-company integrity verified\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:21.379Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8e749ce20cc37e4e7771-49af00946d1a3ab47c8d",
+              "file": "05-data-integrity.spec.ts",
+              "line": 118,
+              "column": 7
+            },
+            {
+              "title": "should handle task deletion without affecting other tasks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4540,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "⊘ Tasks not created properly - skipping deletion test\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:21.993Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8e749ce20cc37e4e7771-f7449ef3e7aa766e278d",
+              "file": "05-data-integrity.spec.ts",
+              "line": 148,
+              "column": 7
+            },
+            {
+              "title": "should maintain database consistency after multiple operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5103,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Task created\n"
+                        },
+                        {
+                          "text": "✓ All operations completed successfully\n"
+                        },
+                        {
+                          "text": "✓ Database consistency maintained\n"
+                        },
+                        {
+                          "text": "✓ Database restored from E2E backup\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-15T06:27:26.538Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8e749ce20cc37e4e7771-38535f1489380ea3e5b7",
+              "file": "05-data-integrity.spec.ts",
+              "line": 214,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-15T06:26:34.398Z",
+    "duration": 57270.159,
+    "expected": 16,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

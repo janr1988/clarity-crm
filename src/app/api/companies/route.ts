@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createCompanySchema } from "@/lib/validation";
-import { ZodError } from "zod";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth, validateReferences } from "@/lib/api-helpers";
+import { handleApiError } from "@/lib/errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await requireAuth();
 
     const searchParams = request.nextUrl.searchParams;
     const industry = searchParams.get("industry");
@@ -45,50 +41,49 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(companies);
   } catch (error) {
-    console.error("Error fetching companies:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch companies" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const session = await requireAuth();
     const body = await request.json();
     const validatedData = createCompanySchema.parse(body);
+
+    // Validate foreign keys if provided
+    if (validatedData.assignedTo) {
+      await validateReferences({
+        userId: validatedData.assignedTo,
+      });
+    }
 
     const company = await prisma.company.create({
       data: {
         ...validatedData,
-        assignedTo: validatedData.assignedTo || null, // Convert undefined to null
-        createdBy: session.user.id, // Set the creator to the logged-in user
+        assignedTo: validatedData.assignedTo || null,
+        createdBy: session.user.id,
+      },
+      include: {
+        creator: {
+          select: { id: true, name: true, email: true },
+        },
+        assignee: {
+          select: { id: true, name: true, email: true },
+        },
+        _count: {
+          select: {
+            customers: true,
+            activities: true,
+            tasks: true,
+            deals: true,
+          },
+        },
       },
     });
 
     return NextResponse.json(company, { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { 
-          error: "Validation failed", 
-          details: error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
-        },
-        { status: 400 }
-      );
-    }
-    console.error("Error creating company:", error);
-    return NextResponse.json(
-      { error: "Failed to create company" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
