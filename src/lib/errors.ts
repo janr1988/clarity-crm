@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { logger } from "./logger";
 
 /**
  * Custom application error class
@@ -30,8 +31,12 @@ export class AppError extends Error {
  * }
  */
 export function handleApiError(error: unknown): NextResponse {
-  // Log the error for debugging
-  console.error("API Error:", error);
+  // Log the error with structured logging
+  if (error instanceof Error) {
+    logger.error("API Error occurred", error);
+  } else {
+    logger.error("API Error occurred", undefined, { error: String(error) });
+  }
 
   // Zod validation errors
   if (error instanceof ZodError) {

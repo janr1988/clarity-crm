@@ -91,6 +91,10 @@ model Task {
   @@index([companyId])
   @@index([plannedWeek])
   @@index([kanbanStatus])
+  @@index([assigneeId, status]) // Common filter combination
+  @@index([dueDate]) // For upcoming tasks queries
+  @@index([createdAt, status]) // For activity feeds
+  @@index([priority, status]) // For priority-based filtering
 }
 
 model Activity {
@@ -122,6 +126,9 @@ model Activity {
   @@index([createdAt])
   @@index([plannedWeek])
   @@index([kanbanStatus])
+  @@index([userId, createdAt]) // User activity timeline
+  @@index([type, createdAt]) // Activity type filtering
+  @@index([customerId, type]) // Customer activity by type
 }
 
 model CallNote {
@@ -144,6 +151,8 @@ model CallNote {
   @@index([userId])
   @@index([customerId])
   @@index([createdAt])
+  @@index([userId, createdAt]) // User call notes timeline
+  @@index([followUpDate]) // For follow-up reminders
 }
 
 model Customer {
@@ -177,6 +186,9 @@ model Customer {
   @@index([status])
   @@index([company])
   @@index([companyId])
+  @@index([assignedTo, status]) // Agent's customers by status
+  @@index([createdAt, status]) // Customer creation timeline
+  @@index([email]) // For email lookups
 }
 
 model Company {
@@ -214,6 +226,9 @@ model Company {
   @@index([industry])
   @@index([status])
   @@index([size])
+  @@index([assignedTo, status]) // Agent's companies by status
+  @@index([industry, size]) // Industry and size filtering
+  @@index([createdAt, status]) // Company creation timeline
 }
 
 // Deal/Opportunity Model
@@ -253,6 +268,10 @@ model Deal {
   @@index([customerId])
   @@index([companyId])
   @@index([createdAt])
+  @@index([ownerId, stage]) // Agent's deals by stage
+  @@index([expectedCloseDate]) // For upcoming deals
+  @@index([stage, expectedCloseDate]) // Deals by stage and close date
+  @@index([value, stage]) // High-value deals by stage
 }
 
 // Deal Notes/Updates

@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { createTaskSchema } from "@/lib/validation";
 import { requireAuth, validateReferences } from "@/lib/api-helpers";
 import { handleApiError } from "@/lib/errors";
+import { withRequestLogging } from "@/lib/request-logger";
+import { logger } from "@/lib/logger";
+import { rateLimiters } from "@/lib/rate-limiter";
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +64,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = rateLimiters.api(async (request: NextRequest) => {
   try {
     const session = await requireAuth();
     const body = await request.json();
@@ -115,5 +118,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
 
