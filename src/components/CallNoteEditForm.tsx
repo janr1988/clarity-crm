@@ -28,13 +28,13 @@ export default function CallNoteEditForm({ callNote }: { callNote: CallNote }) {
 
     const formData = new FormData(e.currentTarget);
     const data = {
-      clientName: formData.get("clientName") as string,
-      clientCompany: formData.get("clientCompany") as string || null,
-      phoneNumber: formData.get("phoneNumber") as string || null,
-      notes: formData.get("notes") as string,
-      summary: formData.get("summary") as string || null,
-      outcome: formData.get("outcome") as string || null,
-      followUpDate: formData.get("followUpDate") as string || null,
+      clientName: (formData.get("clientName") as string) || undefined,
+      clientCompany: (formData.get("clientCompany") as string) || undefined,
+      phoneNumber: (formData.get("phoneNumber") as string) || undefined,
+      notes: (formData.get("notes") as string) || undefined,
+      summary: (formData.get("summary") as string) || undefined,
+      outcome: (formData.get("outcome") as string) || undefined,
+      followUpDate: (formData.get("followUpDate") as string) || undefined,
     };
 
     try {

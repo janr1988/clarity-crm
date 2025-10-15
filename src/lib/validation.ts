@@ -103,7 +103,15 @@ export const updateCallNoteSchema = z.object({
   summary: z.string().optional(),
   aiSummary: z.string().optional(),
   outcome: z.string().optional(),
-  followUpDate: z.string().datetime().optional().nullable(),
+  followUpDate: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => {
+      if (!val || val === "") return undefined;
+      const date = new Date(val);
+      return isNaN(date.getTime()) ? undefined : date.toISOString();
+    }),
 });
 
 // Team schemas
@@ -238,9 +246,24 @@ export const createDealSchema = z.object({
   ownerId: z.string().optional(),
 });
 
+export const updateDealSchema = z.object({
+  name: z.string().min(1, "Deal name is required").max(200, "Deal name must be less than 200 characters").optional(),
+  description: z.string().optional(),
+  value: z.number().min(0, "Deal value must be positive").optional(),
+  probability: z.number().min(0).max(100, "Probability must be between 0 and 100").optional(),
+  stage: z.enum(["PROSPECTING", "LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"]).optional(),
+  expectedCloseDate: z.string().optional(),
+  actualCloseDate: z.string().optional(),
+  source: z.string().optional(),
+  customerId: z.string().optional(),
+  companyId: z.string().optional(),
+  ownerId: z.string().optional(),
+});
+
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
 export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
 export type CreateDealInput = z.infer<typeof createDealSchema>;
+export type UpdateDealInput = z.infer<typeof updateDealSchema>;
 

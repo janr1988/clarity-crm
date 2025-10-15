@@ -24,8 +24,8 @@ interface KanbanColumn {
 }
 
 interface WeeklyKanbanBoardProps {
-  userId: string; // can be a real user id or "ALL"
-  teamId?: string; // required when userId === "ALL"
+  userId?: string; // can be a real user id
+  teamId?: string; // required when userId is not provided
   weekStart: string;
   onTaskMove?: (taskId: string, newStatus: string) => void;
 }
@@ -52,18 +52,23 @@ export default function WeeklyKanbanBoard({
 
   useEffect(() => {
     fetchWeeklyTasks();
-  }, [userId, weekStart]);
+  }, [userId, teamId, weekStart]);
 
   const fetchWeeklyTasks = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ weekStart });
-      if (userId === "ALL") {
-        if (teamId) params.set("teamId", teamId);
+      let url = `/api/tasks/weekly?weekStart=${weekStart}`;
+      if (userId) {
+        url += `&userId=${userId}`;
+      } else if (teamId) {
+        url += `&teamId=${teamId}`;
       } else {
-        params.set("userId", userId);
+        setError("No user or team ID provided for Kanban board.");
+        setLoading(false);
+        return;
       }
-      const response = await fetch(`/api/tasks/weekly?${params.toString()}`);
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error("Failed to fetch weekly tasks");

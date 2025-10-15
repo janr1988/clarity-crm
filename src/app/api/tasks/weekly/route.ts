@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if user can view this user's tasks
-    if (userId && !canViewUserDetails(session, userId)) {
+    // Check if user can view this user's tasks (only for real user IDs, not "ALL")
+    if (userId && userId !== "ALL" && !canViewUserDetails(session, userId)) {
       return NextResponse.json(
         { error: "Forbidden: Cannot view this user's tasks" },
         { status: 403 }
@@ -47,12 +47,26 @@ export async function GET(request: NextRequest) {
       type: "CALL",
     };
 
-    if (userId) {
+    if (userId && userId !== "ALL") {
       taskWhere.assigneeId = userId;
       callWhere.userId = userId;
-    } else if (teamId) {
-      taskWhere.assignee = { teamId };
-      callWhere.user = { teamId } as any; // Prisma relational filter via include
+    } else if (teamId || userId === "ALL") {
+      // Get team members first
+      const effectiveTeamId = teamId || session.user.teamId;
+      if (!effectiveTeamId) {
+        return NextResponse.json(
+          { error: "Team ID is required for team queries" },
+          { status: 400 }
+        );
+      }
+      
+      const teamMembers = await prisma.user.findMany({
+        where: { teamId: effectiveTeamId, isActive: true, role: "SALES_AGENT" },
+        select: { id: true },
+      });
+      const memberIds = teamMembers.map(member => member.id);
+      taskWhere.assigneeId = { in: memberIds };
+      callWhere.userId = { in: memberIds };
     }
 
     // Get both tasks and calls (activities) for the week

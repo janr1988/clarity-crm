@@ -31,14 +31,14 @@ export default function CallNoteCreateForm({ users }: { users: User[] }) {
     const normalizedFollowUp = rawFollowUp ? new Date(rawFollowUp).toISOString() : undefined;
 
     const data = {
-      clientName: formData.get("clientName") as string,
+      clientName: (formData.get("clientName") as string) || undefined,
       clientCompany: (formData.get("clientCompany") as string) || undefined,
       phoneNumber: (formData.get("phoneNumber") as string) || undefined,
-      notes: formData.get("notes") as string,
+      notes: (formData.get("notes") as string) || undefined,
       summary: (formData.get("summary") as string) || undefined,
       outcome: (formData.get("outcome") as string) || undefined,
       followUpDate: normalizedFollowUp,
-      userId: formData.get("userId") as string,
+      userId: (formData.get("userId") as string) || undefined,
     };
 
     try {

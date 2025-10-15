@@ -257,7 +257,8 @@ export default function PlanningPageContent({ teamId }: PlanningPageContentProps
                   {/* Kanban Board */}
                   {selectedMember && (
                     <WeeklyKanbanBoard
-                      userId={selectedMember}
+                      userId={selectedMember === 'all' ? undefined : selectedMember}
+                      teamId={selectedMember === 'all' ? teamId : undefined}
                       weekStart={selectedWeek}
                     />
                   )}
