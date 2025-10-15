@@ -13,7 +13,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    threads: false,
+    poolOptions: {
+      threads: { singleThread: true },
+    },
     setupFiles: ['./test/setupTests.ts'],
     include: ['test/**/*.test.ts', 'test/**/*.test.tsx'],
     coverage: {

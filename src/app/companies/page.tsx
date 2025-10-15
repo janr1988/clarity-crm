@@ -241,7 +241,7 @@ export default function CompaniesPage() {
               <span className="text-sm text-gray-600">Active filters:</span>
               {searchTerm && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  Search: "{searchTerm}" ×
+                  Search: &quot;{searchTerm}&quot; ×
                 </span>
               )}
               {industryFilter && (

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getInitials, getCapacityStatusColor } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
+import { getCapacityStatusColor } from "@/lib/capacityUtils";
 
 interface User {
   id: string;

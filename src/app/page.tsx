@@ -42,7 +42,7 @@ export default async function Dashboard() {
         userId={session.user.id}
         isLead={isLead}
         userName={session.user.name}
-        teamId={teamId}
+        teamId={teamId || undefined}
       />
     </Suspense>
   );

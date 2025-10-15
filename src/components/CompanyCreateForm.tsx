@@ -93,7 +93,7 @@ export default function CompanyCreateForm() {
       if (error instanceof ZodError) {
         setErrors(error.errors);
       } else {
-        setErrors([{ message: error.message || "An unexpected error occurred." }]);
+        setErrors([{ path: [], code: "custom", message: error.message || "An unexpected error occurred." } as any]);
       }
     } finally {
       setIsLoading(false);

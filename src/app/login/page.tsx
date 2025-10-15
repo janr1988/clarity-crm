@@ -69,7 +69,16 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary mb-2">Clarity</h1>
+          <div className="flex items-center justify-center mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400 rounded-2xl shadow-xl">
+              <div className="w-10 h-10 relative">
+                <div className="absolute inset-0 bg-white/20 rounded-lg rotate-45" />
+                <div className="absolute inset-1 bg-white/30 rounded-lg rotate-45" />
+                <span className="relative text-white font-bold text-2xl z-10">C</span>
+              </div>
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">Clarity</h1>
           <p className="text-gray-600">CRM Login</p>
         </div>
 

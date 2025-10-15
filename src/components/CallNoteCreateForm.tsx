@@ -27,14 +27,17 @@ export default function CallNoteCreateForm({ users }: { users: User[] }) {
     setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
+    const rawFollowUp = (formData.get("followUpDate") as string) || "";
+    const normalizedFollowUp = rawFollowUp ? new Date(rawFollowUp).toISOString() : undefined;
+
     const data = {
       clientName: formData.get("clientName") as string,
-      clientCompany: formData.get("clientCompany") as string || undefined,
-      phoneNumber: formData.get("phoneNumber") as string || undefined,
+      clientCompany: (formData.get("clientCompany") as string) || undefined,
+      phoneNumber: (formData.get("phoneNumber") as string) || undefined,
       notes: formData.get("notes") as string,
-      summary: formData.get("summary") as string || undefined,
-      outcome: formData.get("outcome") as string || undefined,
-      followUpDate: formData.get("followUpDate") as string || undefined,
+      summary: (formData.get("summary") as string) || undefined,
+      outcome: (formData.get("outcome") as string) || undefined,
+      followUpDate: normalizedFollowUp,
       userId: formData.get("userId") as string,
     };
 

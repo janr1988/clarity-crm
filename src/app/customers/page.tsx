@@ -5,7 +5,9 @@ import Link from "next/link";
 import CustomerCard from "@/components/CustomerCard";
 import { Customer } from "@prisma/client";
 
-interface CustomerWithCompany extends Customer {
+interface CustomerWithCompany extends Omit<Customer, "email" | "phone"> {
+  email: string | null;
+  phone: string | null;
   companyRef?: {
     id: string;
     name: string;
@@ -236,7 +238,7 @@ export default function CustomersPage() {
               <span className="text-sm text-gray-600">Active filters:</span>
               {searchTerm && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  Search: "{searchTerm}" ×
+                  Search: &quot;{searchTerm}&quot; ×
                 </span>
               )}
               {statusFilter && (
@@ -267,7 +269,7 @@ export default function CustomersPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
           {filteredCustomers.map((customer) => (
-            <CustomerCard key={customer.id} customer={customer} />
+            <CustomerCard key={customer.id} customer={customer as unknown as any} />
           ))}
         </div>
       )}

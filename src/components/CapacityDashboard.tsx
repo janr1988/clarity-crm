@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { getCapacityStatusColor, getCapacityStatusIcon, formatCapacityPercentage } from "@/lib/capacityUtils";
+import { isSalesLead } from "@/lib/authorization";
 
 interface CapacityInfo {
   userId: string;
@@ -33,6 +35,7 @@ interface CapacityDashboardProps {
 }
 
 export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashboardProps) {
+  const { data: session } = useSession();
   const [capacity, setCapacity] = useState<WeeklyCapacity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -134,7 +137,9 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Team Capacity</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {isSalesLead(session) ? "Team Capacity" : "My Capacity"}
+          </h2>
           <p className="text-gray-600">
             Week of {formatDate(capacity.weekStart)} - {formatDate(new Date(new Date(capacity.weekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toISOString())}
           </p>
@@ -156,12 +161,14 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
         </div>
       </div>
 
-      {/* Team Overview */}
+      {/* Team/Personal Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Capacity</p>
+              <p className="text-sm font-medium text-gray-600">
+                {isSalesLead(session) ? "Total Capacity" : "My Capacity"}
+              </p>
               <p className="text-2xl font-bold text-gray-900">{capacity.totalTeamCapacity}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -175,7 +182,9 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Current Usage</p>
+              <p className="text-sm font-medium text-gray-600">
+                {isSalesLead(session) ? "Current Usage" : "My Usage"}
+              </p>
               <p className="text-2xl font-bold text-gray-900">{capacity.totalTeamUsage}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -203,13 +212,15 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
         </div>
       </div>
 
-      {/* Individual Team Members */}
+      {/* Individual Team Members or Personal Capacity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {capacity.teamCapacity.map((member) => (
           <div key={member.userId} className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">{member.userName}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {isSalesLead(session) ? member.userName : "My Capacity"}
+                </h3>
                 <p className="text-sm text-gray-600">
                   {member.workingDays.length} working days • {formatWorkingHours(member.workingHours)}
                 </p>
@@ -253,8 +264,15 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No team members</h3>
-          <p className="mt-1 text-sm text-gray-500">No sales agents found in this team.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            {isSalesLead(session) ? "No team members" : "No capacity data"}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {isSalesLead(session) 
+              ? "No sales agents found in this team." 
+              : "Unable to load your capacity information."
+            }
+          </p>
         </div>
       )}
     </div>

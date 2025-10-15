@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isSalesLead } from "@/lib/authorization";
 import { getTeamCapacityInfo, getWeekStart } from "@/lib/capacityUtils";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,13 +12,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Only Sales Lead can view team capacity
-    if (!isSalesLead(session)) {
-      return NextResponse.json(
-        { error: "Forbidden: Only Sales Leads can view team capacity" },
-        { status: 403 }
-      );
-    }
+    // Both Sales Lead and Sales Agent can view capacity, but with different access levels
+    // Sales Lead can view team capacity, Sales Agent can only view their own
 
     const searchParams = request.nextUrl.searchParams;
     const weekParam = searchParams.get("week");
@@ -39,13 +35,31 @@ export async function GET(request: NextRequest) {
     }
     
     // Get team ID from session or parameter
-    const teamId = teamIdParam || session.user.teamId;
+    let teamId = teamIdParam || session.user.teamId;
     
     if (!teamId) {
       return NextResponse.json(
         { error: "Team ID not found" },
         { status: 400 }
       );
+    }
+
+    // For Sales Agents, only show their own capacity
+    if (!isSalesLead(session)) {
+      // Get the user's team ID to ensure they can only see their own team's data
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { teamId: true }
+      });
+      
+      if (!user?.teamId) {
+        return NextResponse.json(
+          { error: "User not assigned to a team" },
+          { status: 400 }
+        );
+      }
+      
+      teamId = user.teamId;
     }
 
     console.log('=== TEAM CAPACITY API DEBUG ===');

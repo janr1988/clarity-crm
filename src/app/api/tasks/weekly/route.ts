@@ -13,17 +13,18 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
+    const teamId = searchParams.get("teamId");
     const weekStart = searchParams.get("weekStart");
 
-    if (!userId) {
+    if (!userId && !teamId) {
       return NextResponse.json(
-        { error: "User ID is required" },
+        { error: "User ID or Team ID is required" },
         { status: 400 }
       );
     }
 
     // Check if user can view this user's tasks
-    if (!canViewUserDetails(session, userId)) {
+    if (userId && !canViewUserDetails(session, userId)) {
       return NextResponse.json(
         { error: "Forbidden: Cannot view this user's tasks" },
         { status: 403 }
@@ -37,46 +38,36 @@ export async function GET(request: NextRequest) {
     weekEndDate.setDate(weekEndDate.getDate() + 7);
     weekEndDate.setHours(23, 59, 59, 999);
 
+    // Build filters for user or team
+    const taskWhere: any = {
+      dueDate: { gte: weekStartDate, lte: weekEndDate },
+    };
+    const callWhere: any = {
+      createdAt: { gte: weekStartDate, lte: weekEndDate },
+      type: "CALL",
+    };
+
+    if (userId) {
+      taskWhere.assigneeId = userId;
+      callWhere.userId = userId;
+    } else if (teamId) {
+      taskWhere.assignee = { teamId };
+      callWhere.user = { teamId } as any; // Prisma relational filter via include
+    }
+
     // Get both tasks and calls (activities) for the week
     const [tasks, calls] = await Promise.all([
       prisma.task.findMany({
-        where: {
-          assigneeId: userId,
-          plannedWeek: {
-            gte: weekStartDate,
-            lte: weekEndDate,
-          },
-          isPlanned: true,
-        },
+        where: taskWhere,
         include: {
-          assignee: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          assignee: { select: { id: true, name: true, teamId: true } },
         },
-        orderBy: {
-          priority: "desc",
-        },
+        orderBy: { priority: "desc" },
       }),
       prisma.activity.findMany({
-        where: {
-          userId: userId,
-          plannedWeek: {
-            gte: weekStartDate,
-            lte: weekEndDate,
-          },
-          isPlanned: true,
-          type: "CALL",
-        },
+        where: callWhere,
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          user: { select: { id: true, name: true, teamId: true } },
         },
       }),
     ]);
@@ -89,7 +80,7 @@ export async function GET(request: NextRequest) {
       assignee: task.assignee,
       estimatedDuration: task.estimatedDuration,
       priority: task.priority,
-      kanbanStatus: task.kanbanStatus,
+      kanbanStatus: task.status, // Use actual task status instead of kanbanStatus
       type: "task" as const,
     }));
 
@@ -101,7 +92,7 @@ export async function GET(request: NextRequest) {
       assignee: call.user,
       estimatedDuration: call.estimatedDuration || call.duration,
       priority: "MEDIUM", // Default priority for calls
-      kanbanStatus: call.kanbanStatus,
+      kanbanStatus: "TODO", // Default status for calls
       type: "call" as const,
     }));
 

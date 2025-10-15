@@ -4,8 +4,8 @@ import { z } from "zod";
 const sanitizeString = (str: string | undefined) => str?.trim();
 
 // Helper for creating sanitized string schema
-const sanitizedString = (schema: z.ZodString = z.string()) => 
-  schema.transform((val) => val ? sanitizeString(val) : val);
+const sanitizedString = (schema: z.ZodType<string> = z.string()) =>
+  schema.transform((val) => (typeof val === 'string' ? sanitizeString(val) : val));
 
 // User schemas
 export const createUserSchema = z.object({
@@ -29,7 +29,7 @@ export const updateUserSchema = z.object({
 // Task schemas
 export const createTaskSchema = z.object({
   title: z.string().min(1, "Title is required").transform((val) => val.trim()),
-  description: sanitizedString(z.string().optional()),
+  description: z.string().optional().transform((val) => (typeof val === 'string' ? sanitizeString(val) : val)),
   status: z.enum(["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).default("TODO"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
   dueDate: z.string().datetime().optional(),
@@ -78,12 +78,20 @@ export const updateActivitySchema = z.object({
 // CallNote schemas
 export const createCallNoteSchema = z.object({
   clientName: z.string().min(1, "Client name is required").transform((val) => val.trim()),
-  clientCompany: sanitizedString(z.string().optional()),
-  phoneNumber: sanitizedString(z.string().optional()),
+  clientCompany: z.string().optional().transform((val) => (typeof val === 'string' ? sanitizeString(val) : val)),
+  phoneNumber: z.string().optional().transform((val) => (typeof val === 'string' ? sanitizeString(val) : val)),
   notes: z.string().min(1, "Notes are required").transform((val) => val.trim()),
-  summary: sanitizedString(z.string().optional()),
-  outcome: sanitizedString(z.string().optional()),
-  followUpDate: z.string().datetime().optional(),
+  summary: z.string().optional().transform((val) => (typeof val === 'string' ? sanitizeString(val) : val)),
+  outcome: z.string().optional().transform((val) => (typeof val === 'string' ? sanitizeString(val) : val)),
+  // Accept browser "datetime-local" string and normalize to ISO, or undefined
+  followUpDate: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === "") return undefined;
+      const date = new Date(val);
+      return isNaN(date.getTime()) ? undefined : date.toISOString();
+    }),
   userId: z.string().uuid(),
 });
 

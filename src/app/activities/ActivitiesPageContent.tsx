@@ -221,7 +221,7 @@ export default function ActivitiesPageContent() {
                     <div>
                       <Link
                         href={`/activities/${activity.id}`}
-                        className="font-medium text-gray-900 hover:text-primary transition-colors"
+                        className="block font-medium text-gray-900 hover:text-primary transition-colors"
                       >
                         {activity.title}
                       </Link>
@@ -230,7 +230,7 @@ export default function ActivitiesPageContent() {
                           value={activity.user.id}
                           onChange={(e) => handleUserChange(activity.id, e.target.value)}
                           disabled={updatingActivityId === activity.id}
-                          className="text-sm text-gray-600 bg-transparent border-none p-0 mt-1 focus:outline-none focus:ring-0 cursor-pointer hover:text-primary"
+                          className="block text-sm text-gray-600 bg-transparent border-none p-0 mt-1 focus:outline-none focus:ring-0 cursor-pointer hover:text-primary"
                         >
                           {users.map((user) => (
                             <option key={user.id} value={user.id}>
@@ -241,7 +241,7 @@ export default function ActivitiesPageContent() {
                       ) : (
                         <Link
                           href={`/users/${activity.user.id}`}
-                          className="text-sm text-gray-600 hover:text-primary mt-1 inline-block"
+                          className="block text-sm text-gray-600 hover:text-primary mt-1"
                         >
                           {activity.user.name}
                         </Link>

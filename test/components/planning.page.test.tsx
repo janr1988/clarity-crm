@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PlanningPageContent from '@/app/planning/PlanningPageContent';
+import { SessionProvider } from 'next-auth/react';
 
 describe('Planning Page', () => {
   beforeEach(() => {
@@ -50,20 +51,32 @@ describe('Planning Page', () => {
   });
 
   it('renders planning page with tabs', async () => {
-    render(<PlanningPageContent teamId="team1" />);
+    render(
+      <SessionProvider session={{ user: { id: 'lead1', role: 'SALES_LEAD', name: 'Lead', email: 'lead@test.com' } } as any}>
+        <PlanningPageContent teamId="team1" />
+      </SessionProvider>
+    );
     expect(screen.getAllByText('Team Planning').length).toBeGreaterThan(0);
     expect(screen.getByText('Capacity Overview')).toBeInTheDocument();
   });
 
   it('shows week navigation controls', () => {
-    render(<PlanningPageContent teamId="team1" />);
+    render(
+      <SessionProvider session={{ user: { id: 'lead1', role: 'SALES_LEAD', name: 'Lead', email: 'lead@test.com' } } as any}>
+        <PlanningPageContent teamId="team1" />
+      </SessionProvider>
+    );
     expect(screen.getByTitle('Previous week')).toBeInTheDocument();
     expect(screen.getByTitle('Next week')).toBeInTheDocument();
     expect(screen.getByText('This Week')).toBeInTheDocument();
   });
 
   it('loads team members and allows selection', async () => {
-    render(<PlanningPageContent teamId="team1" />);
+    render(
+      <SessionProvider session={{ user: { id: 'lead1', role: 'SALES_LEAD', name: 'Lead', email: 'lead@test.com' } } as any}>
+        <PlanningPageContent teamId="team1" />
+      </SessionProvider>
+    );
     const teamPlanningTab = screen.getAllByText('Team Planning')[1];
     await userEvent.click(teamPlanningTab);
     await waitFor(() => {
@@ -72,7 +85,11 @@ describe('Planning Page', () => {
   });
 
   it('switches between tabs', async () => {
-    render(<PlanningPageContent teamId="team1" />);
+    render(
+      <SessionProvider session={{ user: { id: 'lead1', role: 'SALES_LEAD', name: 'Lead', email: 'lead@test.com' } } as any}>
+        <PlanningPageContent teamId="team1" />
+      </SessionProvider>
+    );
     const teamPlanningTab = screen.getAllByText('Team Planning')[1];
     await userEvent.click(teamPlanningTab);
     await waitFor(() => {

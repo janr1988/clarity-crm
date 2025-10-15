@@ -79,13 +79,25 @@ export async function getUserCapacityInfo(
   console.log(`endOfWeek: ${endOfWeek.toISOString()}`);
   console.log(`Looking for tasks between ${startOfWeek.toISOString()} and ${endOfWeek.toISOString()}`);
   
+  // Count tasks that are due in the current week OR have no due date (assigned this week)
   const currentWeekTasks = await prisma.task.count({
     where: {
       assigneeId: userId,
-      dueDate: {
-        gte: startOfWeek,
-        lte: endOfWeek,
-      },
+      OR: [
+        {
+          dueDate: {
+            gte: startOfWeek,
+            lte: endOfWeek,
+          },
+        },
+        {
+          dueDate: null,
+          createdAt: {
+            gte: startOfWeek,
+            lte: endOfWeek,
+          },
+        },
+      ],
       status: {
         in: ["TODO", "IN_PROGRESS"], // Only count active tasks
       },

@@ -128,7 +128,7 @@ export async function updateDealWithActivity(
         title: activityData.title,
         description: activityData.description,
         userId: activityData.userId,
-        dealId: dealId,
+        // No dealId field in Activity model; attach via customer/company if needed
       },
     });
 
@@ -143,9 +143,7 @@ export async function updateDealWithActivity(
 export async function deleteDealWithCleanup(dealId: string) {
   return await prisma.$transaction(async (tx) => {
     // Delete related activities first
-    await tx.activity.deleteMany({
-      where: { dealId },
-    });
+    // No direct relation field, skip or handle via related entities if needed
 
     // Delete deal notes
     await tx.dealNote.deleteMany({
@@ -193,7 +191,7 @@ export async function reassignTaskWithActivity(
         title: activityData.title,
         description: activityData.description,
         userId: activityData.userId,
-        taskId: taskId,
+        // No taskId field in Activity model
       },
     });
 

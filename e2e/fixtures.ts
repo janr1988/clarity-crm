@@ -110,7 +110,7 @@ export const test = base.extend<TestFixtures>({
   /**
    * Pre-authenticated page as sales agent
    */
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ page }: { page: any }, use: (p: any) => Promise<void>) => {
     // Navigate to login
     await page.goto('/login');
     
@@ -128,7 +128,7 @@ export const test = base.extend<TestFixtures>({
   /**
    * Pre-authenticated page as sales lead
    */
-  salesLeadPage: async ({ page }, use) => {
+  salesLeadPage: async ({ page }: { page: any }, use: (p: any) => Promise<void>) => {
     // Navigate to login
     await page.goto('/login');
     

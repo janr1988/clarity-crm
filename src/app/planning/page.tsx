@@ -14,10 +14,8 @@ export default async function PlanningPage() {
     redirect("/login");
   }
 
-  // Only Sales Lead can access planning page
-  if (!isSalesLead(session)) {
-    redirect("/dashboard");
-  }
+  // Both Sales Lead and Sales Agent can access planning page
+  // No role restriction needed
 
   // Get the team ID from the database for the current user
   const user = await prisma.user.findUnique({

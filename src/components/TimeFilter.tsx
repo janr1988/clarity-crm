@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { CalendarIcon } from "@heroicons/react/24/outline";
-import { TIME_FILTERS, TimeFilter, getDefaultTimeFilter } from "@/lib/dateUtils";
+import { TIME_FILTERS, getDefaultTimeFilter } from "@/lib/dateUtils";
+import type { TimeFilter } from "@/lib/dateUtils";
 
 interface TimeFilterProps {
   page?: string;

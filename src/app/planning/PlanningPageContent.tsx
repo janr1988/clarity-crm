@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Tab } from "@headlessui/react";
+import { useSession } from "next-auth/react";
 import CapacityDashboard from "@/components/CapacityDashboard";
 import WeeklyKanbanBoard from "@/components/WeeklyKanbanBoard";
 import { getWeekStart } from "@/lib/capacityUtils";
+import { isSalesLead } from "@/lib/authorization";
 import { CalendarIcon, ChartBarIcon, UsersIcon } from "@heroicons/react/24/outline";
 
 interface PlanningPageContentProps {
@@ -19,6 +21,7 @@ interface TeamMember {
 }
 
 export default function PlanningPageContent({ teamId }: PlanningPageContentProps) {
+  const { data: session } = useSession();
   const [selectedWeek, setSelectedWeek] = useState(() => {
     // Use the centralized getWeekStart function for consistency
     const weekStart = getWeekStart();
@@ -43,18 +46,58 @@ export default function PlanningPageContent({ teamId }: PlanningPageContentProps
   const fetchTeamMembers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/users?teamId=${teamId}&role=SALES_AGENT`);
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch team members");
-      }
-      
-      const data = await response.json();
-      setTeamMembers(data);
-      
-      // Select first member by default
-      if (data.length > 0 && !selectedMember) {
-        setSelectedMember(data[0].id);
+      if (isSalesLead(session)) {
+        // Sales Lead can see all team members
+        const response = await fetch(`/api/users?teamId=${teamId}&role=SALES_AGENT`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch team members");
+        }
+        
+        const data = await response.json();
+
+        // Add a convenient "Me (Current User)" option to quickly filter to self
+        const meOption: TeamMember | null = session?.user
+          ? {
+              id: session.user.id,
+              name: session.user.name || "Me (Current User)",
+              email: (session.user as any).email || "",
+              role: session.user.role || "",
+            }
+          : null;
+
+        // Add an "All Team Members" synthetic option
+        const allOption: TeamMember = {
+          id: "ALL",
+          name: "All Team Members",
+          email: "",
+          role: "",
+        };
+
+        const members: TeamMember[] = meOption
+          ? [allOption, meOption, ...data.filter((m: TeamMember) => m.id !== meOption.id)]
+          : data;
+
+        setTeamMembers(members);
+        
+        // Select first member by default
+        if (members.length > 0 && !selectedMember) {
+          setSelectedMember(members[0].id);
+        }
+      } else {
+        // Sales Agent can only see themselves
+        if (session?.user?.id) {
+          const response = await fetch(`/api/users/${session.user.id}`);
+          
+          if (!response.ok) {
+            throw new Error("Failed to fetch user data");
+          }
+          
+          const userData = await response.json();
+          setTeamMembers([userData]);
+          setSelectedMember(session.user.id);
+        }
       }
     } catch (err) {
       console.error("Error fetching team members:", err);
@@ -139,99 +182,155 @@ export default function PlanningPageContent({ teamId }: PlanningPageContentProps
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tab.Group>
-        <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1">
-          <Tab
-            className={({ selected }) =>
-              `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-colors
-              ${selected
-                ? "bg-white text-primary shadow"
-                : "text-gray-700 hover:bg-white/[0.12] hover:text-gray-900"
-              }`
-            }
-          >
-            <div className="flex items-center justify-center gap-2">
-              <ChartBarIcon className="w-5 h-5" />
-              <span>Capacity Overview</span>
-            </div>
-          </Tab>
-          <Tab
-            className={({ selected }) =>
-              `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-colors
-              ${selected
-                ? "bg-white text-primary shadow"
-                : "text-gray-700 hover:bg-white/[0.12] hover:text-gray-900"
-              }`
-            }
-          >
-            <div className="flex items-center justify-center gap-2">
-              <UsersIcon className="w-5 h-5" />
-              <span>Team Planning</span>
-            </div>
-          </Tab>
-        </Tab.List>
+      {/* Tabs - Only show for Sales Leads */}
+      {isSalesLead(session) ? (
+        <Tab.Group>
+          <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1">
+            <Tab
+              className={({ selected }) =>
+                `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-colors
+                ${selected
+                  ? "bg-white text-primary shadow"
+                  : "text-gray-700 hover:bg-white/[0.12] hover:text-gray-900"
+                }`
+              }
+            >
+              <div className="flex items-center justify-center gap-2">
+                <ChartBarIcon className="w-5 h-5" />
+                <span>Capacity Overview</span>
+              </div>
+            </Tab>
+            <Tab
+              className={({ selected }) =>
+                `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-colors
+                ${selected
+                  ? "bg-white text-primary shadow"
+                  : "text-gray-700 hover:bg-white/[0.12] hover:text-gray-900"
+                }`
+              }
+            >
+              <div className="flex items-center justify-center gap-2">
+                <UsersIcon className="w-5 h-5" />
+                <span>Team Planning</span>
+              </div>
+            </Tab>
+          </Tab.List>
         
-        <Tab.Panels className="mt-6">
-          {/* Capacity Overview Tab */}
-          <Tab.Panel>
-            <CapacityDashboard teamId={teamId} initialWeek={selectedWeek} />
-          </Tab.Panel>
+          <Tab.Panels className="mt-6">
+            {/* Capacity Overview Tab */}
+            <Tab.Panel>
+              <CapacityDashboard teamId={teamId} initialWeek={selectedWeek} />
+            </Tab.Panel>
 
-          {/* Team Planning Tab */}
-          <Tab.Panel>
-            {loading ? (
-              <div className="animate-pulse">
-                <div className="h-12 bg-gray-200 rounded mb-4"></div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-gray-200 rounded-lg h-96"></div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Member Selection */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <label htmlFor="member-select" className="text-sm font-medium text-gray-700">
-                    View tasks for:
-                  </label>
-                  <select
-                    id="member-select"
-                    value={selectedMember}
-                    onChange={(e) => setSelectedMember(e.target.value)}
-                    className="flex-1 max-w-xs px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    {teamMembers.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name}
-                      </option>
+            {/* Team Planning Tab */}
+            <Tab.Panel>
+              {loading ? (
+                <div className="animate-pulse">
+                  <div className="h-12 bg-gray-200 rounded mb-4"></div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-gray-200 rounded-lg h-96"></div>
                     ))}
-                  </select>
-                </div>
-
-                {/* Kanban Board */}
-                {selectedMember && (
-                  <WeeklyKanbanBoard
-                    userId={selectedMember}
-                    weekStart={selectedWeek}
-                  />
-                )}
-
-                {teamMembers.length === 0 && (
-                  <div className="text-center py-12">
-                    <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No team members</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      No sales agents found in this team.
-                    </p>
                   </div>
-                )}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Member Selection */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <label htmlFor="member-select" className="text-sm font-medium text-gray-700">
+                      View tasks for:
+                    </label>
+                    <select
+                      id="member-select"
+                      value={selectedMember}
+                      onChange={(e) => setSelectedMember(e.target.value)}
+                      className="flex-1 max-w-xs px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      {teamMembers.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Kanban Board */}
+                  {selectedMember && (
+                    <WeeklyKanbanBoard
+                      userId={selectedMember}
+                      weekStart={selectedWeek}
+                    />
+                  )}
+
+                  {teamMembers.length === 0 && (
+                    <div className="text-center py-12">
+                      <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No team members</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        No sales agents found in this team.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Tab.Panel>
+          </Tab.Panels>
+        </Tab.Group>
+      ) : (
+        /* Sales Agent view - Direct Kanban Board with assignee filter (self) */
+        <div className="mt-6 space-y-6">
+          {/* Member Selection (self) */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <label htmlFor="member-select-self" className="text-sm font-medium text-gray-700">
+              View tasks for:
+            </label>
+            <select
+              id="member-select-self"
+              value={selectedMember}
+              onChange={(e) => setSelectedMember(e.target.value)}
+              className="flex-1 max-w-xs px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              {teamMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {loading ? (
+            <div className="animate-pulse">
+              <div className="h-12 bg-gray-200 rounded mb-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-gray-200 rounded-lg h-96"></div>
+                ))}
               </div>
-            )}
-          </Tab.Panel>
-        </Tab.Panels>
-      </Tab.Group>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Kanban Board for Sales Agent */}
+              {selectedMember && (
+                <WeeklyKanbanBoard
+                  userId={selectedMember}
+                  teamId={teamId}
+                  weekStart={selectedWeek}
+                />
+              )}
+
+              {teamMembers.length === 0 && (
+                <div className="text-center py-12">
+                  <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No user data</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Unable to load your user information.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

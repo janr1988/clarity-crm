@@ -24,7 +24,8 @@ interface KanbanColumn {
 }
 
 interface WeeklyKanbanBoardProps {
-  userId: string;
+  userId: string; // can be a real user id or "ALL"
+  teamId?: string; // required when userId === "ALL"
   weekStart: string;
   onTaskMove?: (taskId: string, newStatus: string) => void;
 }
@@ -37,6 +38,7 @@ const COLUMNS = [
 
 export default function WeeklyKanbanBoard({ 
   userId, 
+  teamId,
   weekStart,
   onTaskMove 
 }: WeeklyKanbanBoardProps) {
@@ -55,9 +57,13 @@ export default function WeeklyKanbanBoard({
   const fetchWeeklyTasks = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/tasks/weekly?userId=${userId}&weekStart=${weekStart}`
-      );
+      const params = new URLSearchParams({ weekStart });
+      if (userId === "ALL") {
+        if (teamId) params.set("teamId", teamId);
+      } else {
+        params.set("userId", userId);
+      }
+      const response = await fetch(`/api/tasks/weekly?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch weekly tasks");
@@ -122,7 +128,6 @@ export default function WeeklyKanbanBoard({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kanbanStatus: destination.droppableId,
           status: destination.droppableId === "COMPLETED" ? "COMPLETED" : 
                   destination.droppableId === "IN_PROGRESS" ? "IN_PROGRESS" : "TODO",
         }),

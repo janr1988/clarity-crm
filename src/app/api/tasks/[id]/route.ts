@@ -52,9 +52,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // Check if user can edit this task (creator or assignee)
-    const canEdit = existingTask.createdById === session.user.id || 
-                   existingTask.assigneeId === session.user.id;
+    // Check if user can edit this task (creator, assignee, or sales lead)
+    const isSalesLead = session.user.role === "SALES_LEAD";
+    const canEdit = isSalesLead ||
+      existingTask.createdById === session.user.id || 
+      existingTask.assigneeId === session.user.id;
     
     if (!canEdit) {
       return NextResponse.json({ error: "You don't have permission to edit this task" }, { status: 403 });

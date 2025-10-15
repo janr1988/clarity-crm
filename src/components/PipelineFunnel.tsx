@@ -148,7 +148,7 @@ export default function PipelineFunnel({ stages }: PipelineFunnelProps) {
                   </div>
                   <div className="text-xs text-gray-500">
                     {showConversionRate ? (
-                      <span>{conversionRate.toFixed(0)}% conversion</span>
+                      <span>{(conversionRate ?? 0).toFixed(0)}% conversion</span>
                     ) : statusLabel ? (
                       <span className={stage.stage === 'CLOSED_WON' ? 'text-green-600' : 'text-red-600'}>
                         {statusLabel}

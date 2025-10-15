@@ -28,7 +28,7 @@ describe('Sidebar Planning link', () => {
     expect(link).toHaveAttribute('href', '/planning');
   });
 
-  it('hides Planning link for Sales Agent', async () => {
+  it('shows Planning link for Sales Agent', async () => {
     vi.resetModules();
     vi.doMock('next-auth/react', () => ({
       useSession: () => sessionMockAgent,
@@ -36,7 +36,8 @@ describe('Sidebar Planning link', () => {
     }));
     const { default: SidebarComp } = await import('@/components/Sidebar');
     render(<SidebarComp />);
-    expect(screen.queryByText('Planning')).not.toBeInTheDocument();
+    const link = screen.getByText('Planning').closest('a');
+    expect(link).toHaveAttribute('href', '/planning');
   });
 });
 

@@ -19,21 +19,33 @@ Think of an AI functionality which would support the Head of Sales / Sales Lead 
 
 ## What challenges and thoughts did I face during this project?
 
-- My "development pipline" with git-hub.
-- I had quite some struggles with "create" operations in the beginning hence the try and error process took quite some time. After adding a basic test coverage this process went way smoother.
-- "Trust the AI" / "Don't trust the AI"-Balance: to many features where created out of the box after the inital MVP prompt. Unfortunatly, a lot of them where not working out of the box. I needed quite some time fixing it / cleaning it up.
-- Manniging Dummy-Data and its relation was more challenging than I thought.
-- This new way of working also leads to a rethink about how to approach such a project. When to do what, while iterating over new features and improvements is a challenge. E.g. when to ingest test/dummy-data. How much content should you add to the first prompts etc. 
-- How much time to I need for a feature. Hard to predict right now. I have a big learning curve right now.
+- Setting up a proper development pipeline with GitHub took some trial and error.
+
+- I initially struggled with the "create" operations — the trial-and-error phase was long, but once I added basic test coverage, things became much smoother.
+
+- Finding the right "trust the AI" vs. "don’t trust the AI" balance was tricky. Many features were generated quickly after the initial MVP prompt, but quite a few didn’t work out of the box. Fixing and cleaning them up took time.
+
+- Managing dummy data and its relationships turned out to be more challenging than expected.
+
+- This new way of working required rethinking how to structure and iterate on the project e.g., when to ingest test data, how much content to include in the first prompts, and when to refine features.
+
+- There’s a natural tension between a Product Management mindset (discovery, understanding the problem space, etc.) and the desire to move fast with prototyping. I’m still finding the right balance.
+
+- Estimating how long a feature will take is difficult at this stage — the learning curve is steep, but that’s part of the process.
 
 ## What would I add with more time?
-- Advanced Access & Authentification
-- Integration of email, calendar and marketing automation
-- dedicated mobile app.
-- Better User and Role conecpts.
-- Further AI automation such as task creating
-- AI chat "Selly" to support the Sales Team.
-- ....
+
+- Advanced access and authentication
+
+- Integration with email, calendar, and marketing automation tools
+
+- A dedicated mobile app
+
+- Improved user and role concepts
+
+- Additional AI-driven automation (e.g., task creation)
+
+- CRM-AI “Selly”: a conversational assistant acting as a senior business analyst and facilitator for the team, with a human-in-the-loop approach (the team defines internal rules, instructions, and data sources)
 
 
 
@@ -43,24 +55,22 @@ Think of an AI functionality which would support the Head of Sales / Sales Lead 
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Database**: Prisma with SQLite
+- **Testing**: Unit Test, Intergration Tests, Playwright Test
 - **UI Design**: Clean, minimal design inspired by Linear, Notion, and Apple
 
+## Features:
 ### For Sales Leads
 - **Team Overview Dashboard**: See what the team is working on
 - **Capacity Monitoring**: Check who has free capacity
 - **Performance KPIs**: Evaluate team performance
 - **Agent Details**: Drill into individual sales agent details
 - **Task Reassignment**: Reassign tasks during absences
-- **AI Insights**: Get AI-powered team performance insights and recommendations
-
+- **AI Insights**: Get AI-powered team performance insights and recommendations (Draft)
 ### For All Agents
 - **Activity Logging**: Log calls, meetings, emails, and notes
 - **Task Planning**: Plan and track daily tasks
 - **Call Notes**: Take detailed call notes with AI summary generation
 - **Performance Tracking**: View personal statistics and metrics
-
-
-
 
 
 
@@ -94,11 +104,7 @@ npm run test:watch
 npm run test:ui
 ```
 
-### Test Coverage
 
-- **Unit tests**: Validation schemas (Zod)
-- **Component tests**: Forms for deals and tasks creation
-- **API Integration tests**: Deal creation endpoint with database
 
 Tests use a separate SQLite database (`prisma/test.db`) configured in `.env.test` to avoid conflicts with dev data.
 

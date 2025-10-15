@@ -29,10 +29,10 @@ interface Customer {
     industry?: string;
     size?: string;
   };
-  _count: {
-    activities: number;
-    callNotes: number;
-    tasks: number;
+  _count?: {
+    activities?: number;
+    callNotes?: number;
+    tasks?: number;
   };
 }
 
@@ -113,9 +113,15 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
 
         <div className="flex items-center justify-between text-sm text-gray-500">
           <div className="flex items-center space-x-4">
-            <span>📋 {customer._count.activities}</span>
-            <span>📞 {customer._count.callNotes}</span>
-            <span>✓ {customer._count.tasks}</span>
+            {customer._count?.activities !== undefined && (
+              <span>📋 {customer._count.activities}</span>
+            )}
+            {customer._count?.callNotes !== undefined && (
+              <span>📞 {customer._count.callNotes}</span>
+            )}
+            {customer._count?.tasks !== undefined && (
+              <span>✓ {customer._count.tasks}</span>
+            )}
           </div>
           {customer.assignee && (
             <span className="text-xs">

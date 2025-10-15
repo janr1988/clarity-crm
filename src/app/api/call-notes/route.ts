@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
         notes: validatedData.notes,
         summary: validatedData.summary || null,
         outcome: validatedData.outcome || null,
+        // validatedData.followUpDate is already normalized to ISO if provided
         followUpDate: validatedData.followUpDate ? new Date(validatedData.followUpDate) : null,
         userId: validatedData.userId,
         customerId: body.customerId || null,

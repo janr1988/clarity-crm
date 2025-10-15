@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { cn, getInitials } from "@/lib/utils";
+import Logo from "@/components/Logo";
 import { isSalesLead } from "@/lib/authorization";
 import {
   ChartBarIcon,
@@ -38,7 +39,7 @@ export default function Sidebar() {
       { name: "Dashboard", href: "/", icon: ChartBarIcon },
       { name: "Opportunities", href: "/deals", icon: BriefcaseIcon },
       { name: "Companies", href: "/companies", icon: BuildingOfficeIcon },
-      { name: "Customers", href: "/customers", icon: UserIcon },
+      { name: "Customers", href: "/customers", icon: UserIcon, parent: "Companies" },
       { name: "Tasks", href: "/tasks", icon: CheckIcon },
       { name: "Activities", href: "/activities", icon: ClipboardDocumentListIcon },
       { name: "Call Notes", href: "/call-notes", icon: PhoneIcon },
@@ -48,17 +49,18 @@ export default function Sidebar() {
     if (isSalesLead(session)) {
       return [
         commonItems[0], // Dashboard
+        { name: "AI Insights", href: "/insights", icon: CpuChipIcon, parent: "Dashboard" },
         { name: "KPIs", href: "/kpis", icon: ChartBarSquareIcon },
         { name: "Team", href: "/users", icon: UsersIcon },
         { name: "Planning", href: "/planning", icon: CalendarDaysIcon },
-        { name: "AI Insights", href: "/insights", icon: CpuChipIcon },
         ...commonItems.slice(1), // Rest of common items
       ];
     }
 
-    // Sales Agent gets "My Profile" instead of "Team"
+    // Sales Agent gets "My Profile" instead of "Team" and also gets Planning
     return [
       ...commonItems,
+      { name: "Planning", href: "/planning", icon: CalendarDaysIcon },
       { 
         name: "My Profile", 
         href: session?.user?.id ? `/users/${session.user.id}` : "/users", 
@@ -109,14 +111,9 @@ export default function Sidebar() {
             "flex items-center transition-all duration-300",
             "lg:justify-center xl:justify-start"
           )}>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
-            <div className={cn(
-              "ml-3 transition-all duration-300",
-              "lg:hidden xl:block"
-            )}>
-              <h1 className="text-xl font-bold text-gray-900">Clarity</h1>
+            <Logo size={32} />
+            <div className={cn("ml-3 transition-all duration-300","lg:hidden xl:block")}>
+              <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Clarity</div>
               <p className="text-xs text-gray-500">CRM</p>
             </div>
           </div>
@@ -130,31 +127,62 @@ export default function Sidebar() {
             (item.href !== "/" && pathname.startsWith(item.href));
           const Icon = item.icon;
 
+          // Skip rendering standalone if this is a child; it will be rendered under its parent
+          if (item.parent) return null;
+
+          const children = navigation.filter((c) => c.parent === item.name);
+
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={cn(
-                "flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
-                "lg:justify-center xl:justify-start", // Center on large tablet
-                isActive
-                  ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+            <div key={item.name}>
+              <Link
+                href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
+                  "lg:justify-center xl:justify-start",
+                  isActive
+                    ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                )}
+                title={item.name}
+              >
+                <Icon className={cn(
+                  "h-5 w-5 transition-colors flex-shrink-0",
+                  isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"
+                )} />
+                <span className={cn(
+                  "ml-3 truncate transition-all duration-300",
+                  "lg:hidden xl:block"
+                )}>
+                  {item.name}
+                </span>
+              </Link>
+
+              {children.length > 0 && (
+                <div className="mt-1 space-y-1">
+                  {children.map((child) => {
+                    const isChildActive = pathname.startsWith(child.href);
+                    const ChildIcon = child.icon;
+                    return (
+                      <Link
+                        key={`${item.name}-${child.name}`}
+                        href={child.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={cn(
+                          "ml-8 flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
+                          isChildActive
+                            ? "text-blue-700"
+                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        )}
+                      >
+                        <ChildIcon className="h-4 w-4 text-gray-400 mr-2" />
+                        <span className="truncate">{child.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
-              title={item.name} // Tooltip for large tablet (icons only)
-            >
-              <Icon className={cn(
-                "h-5 w-5 transition-colors flex-shrink-0",
-                isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"
-              )} />
-              <span className={cn(
-                "ml-3 truncate transition-all duration-300",
-                "lg:hidden xl:block" // Hide text on tablet
-              )}>
-                {item.name}
-              </span>
-            </Link>
+            </div>
           );
         })}
       </nav>
