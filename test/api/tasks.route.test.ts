@@ -18,6 +18,27 @@ vi.mock('next-auth', () => ({
 }));
 
 describe('Tasks API', () => {
+  beforeEach(async () => {
+    // Clean up test data
+    await prisma.task.deleteMany({
+      where: { title: { startsWith: 'Test Task' } }
+    });
+    await prisma.user.deleteMany({
+      where: { email: 'test@example.com' }
+    });
+    
+    // Create test user
+    await prisma.user.create({
+      data: {
+        id: 'test-user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        password: 'hashed-password',
+        role: 'SALES_AGENT',
+      },
+    });
+  });
+
   describe('POST /api/tasks', () => {
     it('creates a task with valid data', async () => {
       const taskData = {
@@ -86,7 +107,7 @@ describe('Tasks API', () => {
       dueDate.setDate(dueDate.getDate() + 7); // 7 days from now
 
       const taskData = {
-        title: 'Task with Due Date',
+        title: 'Test Task with Due Date',
         status: 'TODO',
         priority: 'MEDIUM',
         dueDate: dueDate.toISOString(),

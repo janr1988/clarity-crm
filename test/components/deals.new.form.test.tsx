@@ -18,14 +18,14 @@ describe('Deals/New form', () => {
   it('requires company and customer and posts successfully', async () => {
     render(<Page />);
 
-    await userEvent.type(screen.getByLabelText(/Deal Name/i), 'Deal A');
-    await userEvent.type(screen.getByLabelText(/Deal Value/i), '12345');
+    await userEvent.type(screen.getByLabelText(/Opportunity Name/i), 'Deal A');
+    await userEvent.type(screen.getByLabelText(/Opportunity Value/i), '12345');
 
     await userEvent.selectOptions(screen.getByLabelText(/Company \*/i), 'c1');
     await waitFor(() => screen.getByLabelText(/Customer \*/i));
     await userEvent.selectOptions(screen.getByLabelText(/Customer \*/i), 'cust1');
 
-    await userEvent.click(screen.getByRole('button', { name: /Create Deal/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Create Opportunity/i }));
     await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/deals', expect.anything()));
   });
 });

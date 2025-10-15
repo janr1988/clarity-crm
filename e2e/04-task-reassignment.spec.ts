@@ -201,6 +201,12 @@ test.describe('Critical Flow: Task Reassignment', () => {
     const tasks = await tasksResponse.json();
     const createdTask = tasks.find((t: any) => t.title === taskTitle);
     
+    // Verify task was created
+    if (!createdTask) {
+      console.log('Task not found, available tasks:', tasks.map((t: any) => t.title));
+      throw new Error('Task was not created successfully');
+    }
+    
     // Store original data
     const originalTitle = createdTask.title;
     const originalDescription = createdTask.description;

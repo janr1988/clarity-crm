@@ -97,7 +97,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5294,
+                      "duration": 5117,
                       "errors": [],
                       "stdout": [
                         {
@@ -118,7 +118,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:26:34.838Z",
+                      "startTime": "2025-10-15T07:21:19.712Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -147,7 +147,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2483,
+                      "duration": 2413,
                       "errors": [],
                       "stdout": [
                         {
@@ -162,7 +162,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:26:40.259Z",
+                      "startTime": "2025-10-15T07:21:24.939Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -172,7 +172,7 @@
               ],
               "id": "3351f59eaeb98910bde1-e1bb5ff544e9cb6f4656",
               "file": "01-task-creation.spec.ts",
-              "line": 89,
+              "line": 90,
               "column": 7
             },
             {
@@ -191,7 +191,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5571,
+                      "duration": 5319,
                       "errors": [],
                       "stdout": [
                         {
@@ -209,7 +209,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:26:42.752Z",
+                      "startTime": "2025-10-15T07:21:27.357Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -219,7 +219,7 @@
               ],
               "id": "3351f59eaeb98910bde1-23315485cdc465b14e7f",
               "file": "01-task-creation.spec.ts",
-              "line": 117,
+              "line": 118,
               "column": 7
             }
           ]
@@ -255,7 +255,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4076,
+                      "duration": 3993,
                       "errors": [],
                       "stdout": [
                         {
@@ -282,7 +282,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:26:48.332Z",
+                      "startTime": "2025-10-15T07:21:32.684Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -311,7 +311,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3829,
+                      "duration": 3786,
                       "errors": [],
                       "stdout": [
                         {
@@ -326,7 +326,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:26:52.412Z",
+                      "startTime": "2025-10-15T07:21:36.682Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -355,7 +355,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1450,
+                      "duration": 1421,
                       "errors": [],
                       "stdout": [
                         {
@@ -370,7 +370,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:26:56.246Z",
+                      "startTime": "2025-10-15T07:21:40.474Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -416,7 +416,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5021,
+                      "duration": 5151,
                       "errors": [],
                       "stdout": [
                         {
@@ -437,7 +437,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:26:57.705Z",
+                      "startTime": "2025-10-15T07:21:41.904Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -466,7 +466,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2411,
+                      "duration": 2360,
                       "errors": [],
                       "stdout": [
                         {
@@ -481,7 +481,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:02.730Z",
+                      "startTime": "2025-10-15T07:21:47.060Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -510,7 +510,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1499,
+                      "duration": 1504,
                       "errors": [],
                       "stdout": [
                         {
@@ -525,7 +525,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:05.147Z",
+                      "startTime": "2025-10-15T07:21:49.424Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -571,14 +571,14 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5893,
+                      "duration": 5928,
                       "errors": [],
                       "stdout": [
                         {
                           "text": "✓ Database backed up for E2E tests\n"
                         },
                         {
-                          "text": "Task created: dab7f885-dbce-4a3e-8562-3bd8ae593e95, assigned to: 76cc95df-6794-47f6-9533-63127b586c17\n"
+                          "text": "Task created: 7c4959ea-0a79-4e61-b33c-2d64fb691f34, assigned to: 76cc95df-6794-47f6-9533-63127b586c17\n"
                         },
                         {
                           "text": "⊘ Task still assigned to: 76cc95df-6794-47f6-9533-63127b586c17 (reassignment may not be available on this page)\n"
@@ -595,7 +595,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:06.653Z",
+                      "startTime": "2025-10-15T07:21:50.936Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -624,14 +624,14 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2520,
+                      "duration": 4393,
                       "errors": [],
                       "stdout": [
                         {
                           "text": "✓ Database backed up for E2E tests\n"
                         },
                         {
-                          "text": "⊘ Task detail page is view-only\n"
+                          "text": "⊘ Task still assigned - unassignment may not work on detail page\n"
                         },
                         {
                           "text": "✓ Unassignment test completed (feature availability tested)\n"
@@ -642,7 +642,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:12.551Z",
+                      "startTime": "2025-10-15T07:21:56.869Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -657,7 +657,7 @@
             },
             {
               "title": "should maintain task data during reassignment",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -670,31 +670,18 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2538,
-                      "error": {
-                        "message": "TypeError: Cannot read properties of undefined (reading 'title')",
-                        "stack": "TypeError: Cannot read properties of undefined (reading 'title')\n    at /Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts:205:39",
-                        "location": {
-                          "file": "/Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts",
-                          "column": 39,
-                          "line": 205
-                        },
-                        "snippet": "  203 |     \n  204 |     // Store original data\n> 205 |     const originalTitle = createdTask.title;\n      |                                       ^\n  206 |     const originalDescription = createdTask.description;\n  207 |     const originalPriority = createdTask.priority;\n  208 |     "
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts",
-                            "column": 39,
-                            "line": 205
-                          },
-                          "message": "TypeError: Cannot read properties of undefined (reading 'title')\n\n  203 |     \n  204 |     // Store original data\n> 205 |     const originalTitle = createdTask.title;\n      |                                       ^\n  206 |     const originalDescription = createdTask.description;\n  207 |     const originalPriority = createdTask.priority;\n  208 |     \n    at /Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts:205:39"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 4328,
+                      "errors": [],
                       "stdout": [
                         {
                           "text": "✓ Database backed up for E2E tests\n"
+                        },
+                        {
+                          "text": "✓ Task data integrity maintained during reassignment\n"
+                        },
+                        {
+                          "text": "✓ Data integrity test passed\n"
                         },
                         {
                           "text": "✓ Database restored from E2E backup\n"
@@ -702,33 +689,12 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:15.076Z",
+                      "startTime": "2025-10-15T07:22:01.267Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/janruske/Clarity/test-results/04-task-reassignment-Criti-656c7-sk-data-during-reassignment-chromium/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/janruske/Clarity/test-results/04-task-reassignment-Criti-656c7-sk-data-during-reassignment-chromium/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/janruske/Clarity/test-results/04-task-reassignment-Criti-656c7-sk-data-during-reassignment-chromium/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/janruske/Clarity/e2e/04-task-reassignment.spec.ts",
-                        "column": 39,
-                        "line": 205
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "82b642f8c5c842d86c6d-2381f8ef6c783d98c2e1",
@@ -766,10 +732,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2564,
+                      "duration": 2433,
                       "errors": [],
                       "stdout": [
                         {
@@ -784,7 +750,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:17.984Z",
+                      "startTime": "2025-10-15T07:22:05.602Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -810,10 +776,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 704,
+                      "duration": 659,
                       "errors": [],
                       "stdout": [
                         {
@@ -834,7 +800,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:20.670Z",
+                      "startTime": "2025-10-15T07:22:08.039Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -860,10 +826,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 609,
+                      "duration": 561,
                       "errors": [],
                       "stdout": [
                         {
@@ -881,7 +847,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:21.379Z",
+                      "startTime": "2025-10-15T07:22:08.703Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -907,10 +873,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4540,
+                      "duration": 4255,
                       "errors": [],
                       "stdout": [
                         {
@@ -925,7 +891,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:21.993Z",
+                      "startTime": "2025-10-15T07:22:09.268Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -951,10 +917,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5103,
+                      "duration": 5122,
                       "errors": [],
                       "stdout": [
                         {
@@ -975,7 +941,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-15T06:27:26.538Z",
+                      "startTime": "2025-10-15T07:22:13.528Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -995,11 +961,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-10-15T06:26:34.398Z",
-    "duration": 57270.159,
-    "expected": 16,
+    "startTime": "2025-10-15T07:21:19.349Z",
+    "duration": 59327.316,
+    "expected": 17,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }
