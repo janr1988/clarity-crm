@@ -1,0 +1,125 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e7]: C
+        - generic [ref=e8]:
+          - heading "Clarity" [level=1] [ref=e9]
+          - paragraph [ref=e10]: CRM
+      - navigation [ref=e11]:
+        - link "Dashboard" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - img [ref=e13]
+          - generic [ref=e15]: Dashboard
+        - link "KPIs" [ref=e16] [cursor=pointer]:
+          - /url: /kpis
+          - img [ref=e17]
+          - generic [ref=e19]: KPIs
+        - link "Team" [ref=e20] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e21]
+          - generic [ref=e23]: Team
+        - link "Planning" [ref=e24] [cursor=pointer]:
+          - /url: /planning
+          - img [ref=e25]
+          - generic [ref=e27]: Planning
+        - link "AI Insights" [ref=e28] [cursor=pointer]:
+          - /url: /insights
+          - img [ref=e29]
+          - generic [ref=e31]: AI Insights
+        - link "Opportunities" [ref=e32] [cursor=pointer]:
+          - /url: /deals
+          - img [ref=e33]
+          - generic [ref=e35]: Opportunities
+        - link "Companies" [ref=e36] [cursor=pointer]:
+          - /url: /companies
+          - img [ref=e37]
+          - generic [ref=e39]: Companies
+        - link "Customers" [ref=e40] [cursor=pointer]:
+          - /url: /customers
+          - img [ref=e41]
+          - generic [ref=e43]: Customers
+        - link "Tasks" [ref=e44] [cursor=pointer]:
+          - /url: /tasks
+          - img [ref=e45]
+          - generic [ref=e47]: Tasks
+        - link "Activities" [ref=e48] [cursor=pointer]:
+          - /url: /activities
+          - img [ref=e49]
+          - generic [ref=e51]: Activities
+        - link "Call Notes" [ref=e52] [cursor=pointer]:
+          - /url: /call-notes
+          - img [ref=e53]
+          - generic [ref=e55]: Call Notes
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]: ST
+          - generic [ref=e59]:
+            - generic [ref=e60]: Sarah Thompson
+            - generic [ref=e61]: SALES LEAD
+        - button "Abmelden" [ref=e62] [cursor=pointer]:
+          - img [ref=e63]
+          - generic [ref=e65]: Abmelden
+    - main [ref=e66]:
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - link "← Back to Opportunities" [ref=e69] [cursor=pointer]:
+            - /url: /deals
+          - heading "Create New Opportunity" [level=1] [ref=e70]
+          - paragraph [ref=e71]: Add a new sales opportunity
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - generic [ref=e76]: Opportunity Name *
+              - textbox "Opportunity Name *" [ref=e77]:
+                - /placeholder: Enterprise Software License
+                - text: Consistency Deal 1760513638668-ro9vai
+            - generic [ref=e78]:
+              - generic [ref=e79]: Opportunity Value (€) *
+              - spinbutton "Opportunity Value (€) *" [ref=e80]: "10000"
+            - generic [ref=e81]:
+              - generic [ref=e82]: Stage *
+              - combobox "Stage *" [ref=e83]:
+                - option "Prospecting" [selected]
+                - option "Qualified"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Closed Won"
+                - option "Closed Lost"
+            - generic [ref=e84]:
+              - generic [ref=e85]: Company *
+              - combobox "Company *" [active] [ref=e86]:
+                - option "Select a company" [selected]
+                - option "RetailTech Pro"
+                - option "EduTech Solutions"
+                - option "SAP SE"
+                - option "CloudScale GmbH"
+                - option "MedTech Innovations"
+                - option "AutoParts Manufacturing"
+                - option "GreenEnergy Solutions"
+                - option "FinTech Dynamics"
+                - option "BMW Group"
+                - option "Siemens AG"
+            - generic [ref=e87]:
+              - generic [ref=e88]: Customer *
+              - combobox "Customer *" [disabled] [ref=e89]:
+                - option "Select a company first" [selected]
+            - generic [ref=e90]:
+              - generic [ref=e91]: Owner
+              - combobox "Owner" [ref=e92]:
+                - option "Auto-assign" [selected]
+                - option "Alexandra Müller (alexandra.mueller@clarity.com)"
+                - option "Marcus Weber (marcus.weber@clarity.com)"
+                - option "Sarah Thompson (sarah.thompson@clarity.com)"
+                - option "Sophie Schneider (sophie.schneider@clarity.com)"
+                - option "Test User (test@example.com)"
+                - option "Thomas Fischer (thomas.fischer@clarity.com)"
+          - generic [ref=e93]:
+            - link "Cancel" [ref=e94] [cursor=pointer]:
+              - /url: /deals
+            - button "Create Opportunity" [ref=e95] [cursor=pointer]
+  - alert [ref=e96]
+```
