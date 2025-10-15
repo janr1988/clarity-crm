@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { updateTaskSchema } from "@/lib/validation";
 import { ZodError } from "zod";
+import { requireAuth } from "@/lib/api-helpers";
+import { handleApiError } from "@/lib/errors";
 
 export async function GET(
   request: NextRequest,
@@ -36,8 +38,27 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await requireAuth();
     const body = await request.json();
     const validatedData = updateTaskSchema.parse(body);
+
+    // Check if task exists and user has permission to edit
+    const existingTask = await prisma.task.findUnique({
+      where: { id: params.id },
+      select: { id: true, createdById: true, assigneeId: true }
+    });
+
+    if (!existingTask) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    // Check if user can edit this task (creator or assignee)
+    const canEdit = existingTask.createdById === session.user.id || 
+                   existingTask.assigneeId === session.user.id;
+    
+    if (!canEdit) {
+      return NextResponse.json({ error: "You don't have permission to edit this task" }, { status: 403 });
+    }
 
     const task = await prisma.task.update({
       where: { id: params.id },
@@ -54,17 +75,7 @@ export async function PATCH(
 
     return NextResponse.json(task);
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
-        { status: 400 }
-      );
-    }
-    console.error("Error updating task:", error);
-    return NextResponse.json(
-      { error: "Failed to update task" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -73,17 +84,30 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await requireAuth();
+    
+    // Check if task exists and user has permission to delete
+    const existingTask = await prisma.task.findUnique({
+      where: { id: params.id },
+      select: { id: true, createdById: true }
+    });
+
+    if (!existingTask) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    // Only the creator can delete the task
+    if (existingTask.createdById !== session.user.id) {
+      return NextResponse.json({ error: "You don't have permission to delete this task" }, { status: 403 });
+    }
+
     await prisma.task.delete({
       where: { id: params.id },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting task:", error);
-    return NextResponse.json(
-      { error: "Failed to delete task" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

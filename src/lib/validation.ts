@@ -38,13 +38,22 @@ export const createTaskSchema = z.object({
 });
 
 export const updateTaskSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
+  title: z.string().min(1, "Title is required").optional(),
+  description: z.string().optional().transform((val) => val === "" ? null : val),
   status: z.enum(["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-  dueDate: z.string().datetime().optional().nullable(),
-  assigneeId: z.string().uuid().optional().nullable(),
-  teamId: z.string().uuid().optional().nullable(),
+  dueDate: z.string().optional().transform((val) => {
+    if (!val || val === "") return null;
+    // Try to parse as datetime, if it fails, try as local datetime
+    try {
+      const date = new Date(val);
+      return isNaN(date.getTime()) ? null : date.toISOString();
+    } catch {
+      return null;
+    }
+  }),
+  assigneeId: z.string().optional().transform((val) => val === "" ? null : val),
+  teamId: z.string().uuid().optional().transform((val) => val === "" ? null : val),
   estimatedDuration: z.number().int().positive().optional().nullable(),
   actualDuration: z.number().int().positive().optional().nullable(),
 });

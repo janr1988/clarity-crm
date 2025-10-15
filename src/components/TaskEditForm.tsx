@@ -31,12 +31,17 @@ export default function TaskEditForm({ task, users }: { task: Task; users: User[
     const formData = new FormData(e.currentTarget);
     const data = {
       title: formData.get("title") as string,
-      description: formData.get("description") as string || null,
+      description: (formData.get("description") as string) || null,
       status: formData.get("status") as string,
       priority: formData.get("priority") as string,
-      assigneeId: formData.get("assigneeId") as string || null,
-      dueDate: formData.get("dueDate") as string || null,
+      assigneeId: (formData.get("assigneeId") as string) || null,
+      dueDate: (formData.get("dueDate") as string) || null,
     };
+
+    // Clean up empty strings to null for optional fields
+    if (data.description === "") data.description = null;
+    if (data.assigneeId === "") data.assigneeId = null;
+    if (data.dueDate === "") data.dueDate = null;
 
     try {
       const response = await fetch(`/api/tasks/${task.id}`, {
@@ -46,8 +51,13 @@ export default function TaskEditForm({ task, users }: { task: Task; users: User[
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update task");
+        const errorData = await response.json();
+        if (errorData.details && Array.isArray(errorData.details)) {
+          // Show specific validation errors
+          const errorMessages = errorData.details.map((err: any) => err.message).join(", ");
+          throw new Error(`Validation failed: ${errorMessages}`);
+        }
+        throw new Error(errorData.error || "Failed to update task");
       }
 
       router.refresh();
