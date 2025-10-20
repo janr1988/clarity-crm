@@ -113,7 +113,11 @@ export async function GET(request: NextRequest) {
     // Combine and return
     const allItems = [...formattedTasks, ...formattedCalls];
 
-    return NextResponse.json(allItems);
+    return NextResponse.json(allItems, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error("Error fetching weekly tasks:", error);
     return NextResponse.json(

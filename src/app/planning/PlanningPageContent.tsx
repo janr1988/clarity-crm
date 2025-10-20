@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tab } from "@headlessui/react";
 import { useSession } from "next-auth/react";
 import CapacityDashboard from "@/components/CapacityDashboard";
@@ -8,6 +8,7 @@ import WeeklyKanbanBoard from "@/components/WeeklyKanbanBoard";
 import { getWeekStart } from "@/lib/capacityUtils";
 import { isSalesLead } from "@/lib/authorization";
 import { CalendarIcon, ChartBarIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { usePlanningData } from "@/lib/hooks/usePlanningData";
 
 interface PlanningPageContentProps {
   teamId: string;
@@ -23,88 +24,20 @@ interface TeamMember {
 export default function PlanningPageContent({ teamId }: PlanningPageContentProps) {
   const { data: session } = useSession();
   const [selectedWeek, setSelectedWeek] = useState(() => {
-    // Use the centralized getWeekStart function for consistency
     const weekStart = getWeekStart();
-    const weekString = weekStart.toISOString().split('T')[0];
-    
-    console.log('=== PLANNING PAGE FRONTEND DEBUG - UPDATED AT:', new Date().toISOString(), '===');
-    console.log('Planning Page - Using getWeekStart():', weekStart.toISOString());
-    console.log('Planning Page - Week string:', weekString);
-    console.log('Planning Page - WeekStart day of week:', weekStart.getDay());
-    console.log('=== END PLANNING PAGE DEBUG ===');
-    
-    return weekString;
+    return weekStart.toISOString().split('T')[0];
   });
   const [selectedMember, setSelectedMember] = useState<string>("");
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTeamMembers();
-  }, [teamId]);
+  // Use unified planning data hook
+  const { data: planningData, error, isLoading: loading } = usePlanningData(teamId, selectedWeek);
 
-  const fetchTeamMembers = async () => {
-    try {
-      setLoading(true);
-      
-      if (isSalesLead(session)) {
-        // Sales Lead can see all team members
-        const response = await fetch(`/api/users?teamId=${teamId}&role=SALES_AGENT`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch team members");
-        }
-        
-        const data = await response.json();
+  // Set default selected member when data loads
+  if (planningData && !selectedMember && planningData.teamMembers.length > 0) {
+    setSelectedMember(planningData.teamMembers[0].id);
+  }
 
-        // Add a convenient "Me (Current User)" option to quickly filter to self
-        const meOption: TeamMember | null = session?.user
-          ? {
-              id: session.user.id,
-              name: session.user.name || "Me (Current User)",
-              email: (session.user as any).email || "",
-              role: session.user.role || "",
-            }
-          : null;
-
-        // Add an "All Team Members" synthetic option
-        const allOption: TeamMember = {
-          id: "ALL",
-          name: "All Team Members",
-          email: "",
-          role: "",
-        };
-
-        const members: TeamMember[] = meOption
-          ? [allOption, meOption, ...data.filter((m: TeamMember) => m.id !== meOption.id)]
-          : data;
-
-        setTeamMembers(members);
-        
-        // Select first member by default
-        if (members.length > 0 && !selectedMember) {
-          setSelectedMember(members[0].id);
-        }
-      } else {
-        // Sales Agent can only see themselves
-        if (session?.user?.id) {
-          const response = await fetch(`/api/users/${session.user.id}`);
-          
-          if (!response.ok) {
-            throw new Error("Failed to fetch user data");
-          }
-          
-          const userData = await response.json();
-          setTeamMembers([userData]);
-          setSelectedMember(session.user.id);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching team members:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const teamMembers = planningData?.teamMembers || [];
 
   const formatWeekRange = (weekStart: string) => {
     try {
@@ -134,6 +67,22 @@ export default function PlanningPageContent({ teamId }: PlanningPageContentProps
   const goToCurrentWeek = () => {
     setSelectedWeek(getWeekStart().toISOString().split('T')[0]);
   };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Team Planning</h1>
+        <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            Failed to load planning data
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

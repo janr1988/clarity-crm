@@ -136,6 +136,7 @@ export async function getUserCapacityInfo(
 
 /**
  * Get capacity information for all team members for a specific week
+ * Optimized with a single GROUP BY query instead of N individual queries
  */
 export async function getTeamCapacityInfo(
   teamId: string,
@@ -144,7 +145,7 @@ export async function getTeamCapacityInfo(
   const startOfWeek = weekStart || getWeekStart();
   const endOfWeek = getWeekEnd(startOfWeek);
 
-  // Get all team members
+  // Get all team members with capacity settings
   const teamMembers = await prisma.user.findMany({
     where: {
       teamId: teamId,
@@ -154,23 +155,92 @@ export async function getTeamCapacityInfo(
     include: { capacity: true },
   });
 
-  // Get capacity info for each team member
-  const teamCapacity = await Promise.all(
-    teamMembers
-      .filter((member) => member.capacity)
-      .map((member) => getUserCapacityInfo(member.id, startOfWeek))
+  const membersWithCapacity = teamMembers.filter((member) => member.capacity);
+  
+  if (membersWithCapacity.length === 0) {
+    return {
+      weekStart: startOfWeek,
+      weekEnd: endOfWeek,
+      teamCapacity: [],
+      totalTeamCapacity: 0,
+      totalTeamUsage: 0,
+      teamCapacityPercentage: 0,
+    };
+  }
+
+  const memberIds = membersWithCapacity.map(m => m.id);
+
+  // Single optimized query using GROUP BY to get task counts for all members
+  const taskCounts = await prisma.task.groupBy({
+    by: ['assigneeId'],
+    where: {
+      assigneeId: { in: memberIds },
+      OR: [
+        {
+          dueDate: {
+            gte: startOfWeek,
+            lte: endOfWeek,
+          },
+        },
+        {
+          dueDate: null,
+          createdAt: {
+            gte: startOfWeek,
+            lte: endOfWeek,
+          },
+        },
+      ],
+      status: {
+        in: ["TODO", "IN_PROGRESS"], // Only count active tasks
+      },
+    },
+    _count: {
+      id: true,
+    },
+  });
+
+  // Create a map for quick lookup
+  const taskCountMap = new Map(
+    taskCounts.map(tc => [tc.assigneeId!, tc._count.id])
   );
 
-  const validCapacity = teamCapacity.filter((info): info is CapacityInfo => info !== null);
+  // Build capacity info for each member
+  const teamCapacity: CapacityInfo[] = membersWithCapacity.map(member => {
+    const currentWeekItems = taskCountMap.get(member.id) || 0;
+    const availableSlots = Math.max(0, member.capacity!.maxItemsPerWeek - currentWeekItems);
+    const capacityPercentage = (currentWeekItems / member.capacity!.maxItemsPerWeek) * 100;
 
-  const totalTeamCapacity = validCapacity.reduce((sum, info) => sum + info.maxItemsPerWeek, 0);
-  const totalTeamUsage = validCapacity.reduce((sum, info) => sum + info.currentWeekItems, 0);
+    let status: CapacityInfo["status"] = "available";
+    if (capacityPercentage >= 100) {
+      status = currentWeekItems > member.capacity!.maxItemsPerWeek ? "overloaded" : "full";
+    } else if (capacityPercentage >= 75) {
+      status = "moderate";
+    }
+
+    return {
+      userId: member.id,
+      userName: member.name,
+      maxItemsPerWeek: member.capacity!.maxItemsPerWeek,
+      currentWeekItems,
+      availableSlots,
+      capacityPercentage: Math.round(capacityPercentage),
+      status,
+      workingDays: member.capacity!.workingDays.split(","),
+      workingHours: {
+        start: member.capacity!.workingHoursStart,
+        end: member.capacity!.workingHoursEnd,
+      },
+    };
+  });
+
+  const totalTeamCapacity = teamCapacity.reduce((sum, info) => sum + info.maxItemsPerWeek, 0);
+  const totalTeamUsage = teamCapacity.reduce((sum, info) => sum + info.currentWeekItems, 0);
   const teamCapacityPercentage = totalTeamCapacity > 0 ? (totalTeamUsage / totalTeamCapacity) * 100 : 0;
 
   return {
     weekStart: startOfWeek,
     weekEnd: endOfWeek,
-    teamCapacity: validCapacity,
+    teamCapacity,
     totalTeamCapacity,
     totalTeamUsage,
     teamCapacityPercentage: Math.round(teamCapacityPercentage),

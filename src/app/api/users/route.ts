@@ -47,7 +47,11 @@ export async function GET(request: NextRequest) {
     // Remove passwords from response
     const usersWithoutPasswords = users.map(({ password, ...user }) => user);
 
-    return NextResponse.json(usersWithoutPasswords);
+    return NextResponse.json(usersWithoutPasswords, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240',
+      },
+    });
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(

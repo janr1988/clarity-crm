@@ -26,9 +26,11 @@ export async function GET(request: NextRequest) {
       if (weekParam.match(/^\d{4}-\d{2}-\d{2}$/)) {
         // Parse as local date to avoid timezone issues
         const [year, month, day] = weekParam.split('-').map(Number);
-        weekStart = new Date(year, month - 1, day); // month is 0-indexed
+        const parsedDate = new Date(year, month - 1, day); // month is 0-indexed
+        // Normalize to the Monday of that week
+        weekStart = getWeekStart(parsedDate);
       } else {
-        weekStart = new Date(weekParam);
+        weekStart = getWeekStart(new Date(weekParam));
       }
     } else {
       weekStart = getWeekStart();
@@ -75,7 +77,11 @@ export async function GET(request: NextRequest) {
     console.log('API teamCapacity totalUsage:', teamCapacity.totalTeamUsage);
     console.log('=== END DEBUG ===');
 
-    return NextResponse.json(teamCapacity);
+    return NextResponse.json(teamCapacity, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error("Error fetching team capacity:", error);
     return NextResponse.json(

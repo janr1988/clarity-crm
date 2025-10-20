@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,6 +118,10 @@ export async function GET(request: NextRequest) {
       callNotes,
       upcomingTasks,
       stats,
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+      },
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);

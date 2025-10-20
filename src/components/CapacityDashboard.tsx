@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { getCapacityStatusColor, getCapacityStatusIcon, formatCapacityPercentage } from "@/lib/capacityUtils";
 import { isSalesLead } from "@/lib/authorization";
+import { fetcher, swrConfig } from "@/lib/swr-config";
 
 interface CapacityInfo {
   userId: string;
@@ -36,32 +38,13 @@ interface CapacityDashboardProps {
 
 export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashboardProps) {
   const { data: session } = useSession();
-  const [capacity, setCapacity] = useState<WeeklyCapacity | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [currentWeek, setCurrentWeek] = useState(initialWeek || new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
-    fetchCapacityData();
-  }, [teamId, currentWeek]);
-
-  const fetchCapacityData = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/capacity/team?teamId=${teamId}&week=${currentWeek}`);
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch capacity data");
-      }
-      
-      const data = await response.json();
-      setCapacity(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: capacity, error, isLoading: loading, mutate } = useSWR<WeeklyCapacity>(
+    `/api/capacity/team?teamId=${teamId}&week=${currentWeek}`,
+    fetcher,
+    swrConfig
+  );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -118,7 +101,7 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
           <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
           </svg>
-          Error: {error}
+          Error: Failed to load capacity data
         </div>
       </div>
     );
@@ -153,7 +136,7 @@ export default function CapacityDashboard({ teamId, initialWeek }: CapacityDashb
             className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
           />
           <button
-            onClick={fetchCapacityData}
+            onClick={() => mutate()}
             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
           >
             Refresh

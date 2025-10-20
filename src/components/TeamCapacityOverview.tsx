@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { ChartBarIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { fetcher, swrConfig } from "@/lib/swr-config";
 
 interface TeamCapacityData {
-  totalCapacity: number;
-  totalUsage: number;
-  capacityUsedPercentage: number;
+  totalTeamCapacity: number;
+  totalTeamUsage: number;
+  teamCapacityPercentage: number;
   teamCapacity: Array<{
     userId: string;
     userName: string;
@@ -23,40 +24,17 @@ interface TeamCapacityOverviewProps {
 }
 
 export default function TeamCapacityOverview({ teamId, weekStart }: TeamCapacityOverviewProps) {
-  const [capacity, setCapacity] = useState<TeamCapacityData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const url = teamId 
+    ? weekStart 
+      ? `/api/capacity/team?teamId=${teamId}&week=${weekStart}`
+      : `/api/capacity/team?teamId=${teamId}`
+    : null;
 
-  useEffect(() => {
-    fetchTeamCapacity();
-  }, [teamId, weekStart]);
-
-  const fetchTeamCapacity = async () => {
-    if (!teamId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const url = weekStart 
-        ? `/api/capacity/team?teamId=${teamId}&week=${weekStart}`
-        : `/api/capacity/team?teamId=${teamId}`;
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch team capacity");
-      }
-      
-      const data = await response.json();
-      setCapacity(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: capacity, error, isLoading: loading } = useSWR<TeamCapacityData>(
+    url,
+    fetcher,
+    swrConfig
+  );
 
   const getCapacityBarColor = (percentage: number) => {
     if (percentage >= 100) return "bg-red-500";
@@ -96,7 +74,18 @@ export default function TeamCapacityOverview({ teamId, weekStart }: TeamCapacity
     );
   }
 
-  if (error || !capacity) {
+  if (error) {
+    return (
+      <div className="bg-white p-6 rounded shadow-card">
+        <div className="flex items-center gap-2 text-red-500">
+          <ChartBarIcon className="w-5 h-5" />
+          <span className="text-sm">Failed to load team capacity</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!capacity) {
     return (
       <div className="bg-white p-6 rounded shadow-card">
         <div className="flex items-center gap-2 text-gray-500">
@@ -124,21 +113,21 @@ export default function TeamCapacityOverview({ teamId, weekStart }: TeamCapacity
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-600">Team Capacity</span>
           <span className="text-sm font-semibold text-gray-900">
-            {capacity.totalUsage} / {capacity.totalCapacity} items
+            {capacity.totalTeamUsage} / {capacity.totalTeamCapacity} items
           </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div
-            className={`h-3 rounded-full transition-all ${getCapacityBarColor(capacity.capacityUsedPercentage)}`}
-            style={{ width: `${Math.min(100, capacity.capacityUsedPercentage)}%` }}
+            className={`h-3 rounded-full transition-all ${getCapacityBarColor(capacity.teamCapacityPercentage)}`}
+            style={{ width: `${Math.min(100, capacity.teamCapacityPercentage)}%` }}
           />
         </div>
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-gray-500">
-            {capacity.capacityUsedPercentage}% utilized
+            {capacity.teamCapacityPercentage}% utilized
           </span>
           <span className="text-xs font-medium text-gray-900">
-            {capacity.totalCapacity - capacity.totalUsage} slots available
+            {capacity.totalTeamCapacity - capacity.totalTeamUsage} slots available
           </span>
         </div>
       </div>
